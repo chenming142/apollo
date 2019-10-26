@@ -1,4 +1,5 @@
 import Mock from "mockjs";
+import Logging from './logging';
 
 const rd = Mock.Random;
 
@@ -19,10 +20,10 @@ export class Generator {
 
 export default class GeneratorFactory {
   static generateWechatByMock(num) {
-    console.log("- generateWechatByMock: " + num);
+    Logging.info("- generateWechatByMock: " + num);
     let wechatInfos = Array.from({ length: num }, () =>
       Generator.generateWechat()
     );
-    console.log(wechatInfos);
+    Logging.info(wechatInfos);
   }
 }
