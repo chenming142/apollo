@@ -1,5 +1,5 @@
 {
-  "name": "flyweight-for-wechat",
+  "name": "apollo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -45,5 +45,5 @@
     "not ie <= 8"
   ],
   "keywords": [],
-  "description": "Flyweight for Wechat, Friend, Chatroom, WechatInfo"
+  "description": "Apollo reconstructure by Flyweight and Factory."
 }
