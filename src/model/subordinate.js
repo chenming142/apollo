@@ -7,7 +7,7 @@ export default function SubordinateMixin(Base) {
     }
     checkSubordinateWechatNew() {
       let { personalid } = this;
-      console.log("- checkSubordinateWechatNew: " + personalid);
+      // console.log("- checkSubordinateWechatNew: " + personalid);
       WechatFactory.checkWechatNew(personalid);
     }
     checkSubordinateWechatAvaliable() {

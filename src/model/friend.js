@@ -230,20 +230,3 @@ export default class FriendFatory {
     friend.setExtraInfo(friendInfo);
   }
 }
-
-let o = {
-    "101": { a: 101 },
-    "102": { b: 102 },
-    "103": { c: 103 },
-    "104": { d: 104 },
-    "105": { e: 105 }
-  },
-  ret = [];
-
-["101", "102", "105"].forEach(i => {
-  ret.push(o[i]);
-});
-// console.log("-1-", ret);
-
-ret = ["101", "102", "105"].reduce((total, item) => total.concat([o[item]]), []);
-// console.log("-2-", ret);

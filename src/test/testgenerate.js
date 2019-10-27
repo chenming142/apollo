@@ -1,5 +1,7 @@
 import GeneratorFactory from "../api/generate";
 
 (function main() {
-  GeneratorFactory.generateWechatByMock(10);
+  GeneratorFactory.generateWechat(10);
+
+  GeneratorFactory.generateFriend(20);
 })();

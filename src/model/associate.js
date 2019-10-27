@@ -20,6 +20,7 @@ const AssociateMixin = Base =>
           ChatroomFatory.checkChatroomNew(chattargetid);
           break;
         default:
+          throw Error("建立关联失败，无法建立该类型关联: "+chattargettype);
           break;
       }
     }
