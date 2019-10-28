@@ -4,13 +4,13 @@ import constants from "../utils/constants";
 import MessageFactory, { Message, MessageFlyweightFactory } from "./message";
 import { Friend } from "./friend";
 import { Chatroom } from "./chatroom";
-import SubordinateMixin from "./subordinate";
+import SubordinatorMixin from "./subordinate";
 import AssociateMixin from "./associate";
 
 const __chattargettype__ = constants.CHAT_TARGET_TYPE;
 const __disturb__ = constants.DISTURB;
 
-export class Recent extends AssociateMixin(SubordinateMixin(ExtraInfo)) {
+export class Recent extends AssociateMixin(SubordinatorMixin(ExtraInfo)) {
   constructor(personalid, chattargetid, chattargettype, wechatid) {
     super();
     this.personalid = personalid;

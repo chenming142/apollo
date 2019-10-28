@@ -4,6 +4,11 @@ import MessageFactory from "../model/message";
 import FriendFatory from "../model/friend";
 import WechatFactory from "../model/wechat";
 import WechatInfoFlyweightFactory from "../model/wechatInfo";
+import ChatroomFactory from '../model/chatroom';
+
+import Logging from '../api/logging';
+
+const messageLog = Logging.getLogger('message');
 
 const __events__ = constants.EVENT_BUS_EVENTS;
 const __changetype__ = constants.CHANGETYPE;
@@ -38,17 +43,22 @@ function parseSignalRMessageInfo(messageInfo) {
   }
   function messageProcessHandler(message) {
     let { cmdtype } = message;
+    console.log('\n')
     switch (cmdtype) {
       case "CmdNewSysMessage":
-        console.log("--- receive[CmdNewSysMessage]");
+        messageLog.info("--- receive[CmdNewSysMessage]");
         instance.$emit(__events__.NEW_MESSAGE, message);
         break;
       case "CmdFriendInfoChanged":
-        console.log("--- receive[CmdFriendInfoChanged]");
+        messageLog.info("--- receive[CmdFriendInfoChanged]");
         instance.$emit(__events__.FRIEND_INFO_CHANGED, message);
         break;
+      case "CmdClusterInfoChanged":
+        messageLog.info("--- receive[CmdClusterInfoChanged]");
+        instance.$emit(__events__.CHATROOM_INFO_CHANGED, message);
+        break;  
       default:
-        console.log("消息事件尚未实现: " + cmdtype, message);
+        messageLog.warn("消息事件尚未实现: " + cmdtype, message);
     }
   }
 }
@@ -218,7 +228,7 @@ export function onFriendInfoChanged() {
           },
           {
             changetype: 1,
-            memberid: 1002,
+            memberid: 1003,
             clusterid: 38976,
             wechatid: "wxid_ig4d4uh7fqlm21",
             wechatno: "",
@@ -232,7 +242,7 @@ export function onFriendInfoChanged() {
           },
           {
             changetype: 1,
-            memberid: 1002,
+            memberid: 1004,
             clusterid: 38976,
             wechatid: "wxid_48eq4p9fs3v921",
             wechatno: "",
@@ -246,7 +256,7 @@ export function onFriendInfoChanged() {
           },
           {
             changetype: 1,
-            memberid: 1002,
+            memberid: 1005,
             clusterid: 38976,
             wechatid: "wxid_j45e7f7zb28e22",
             wechatno: "",
@@ -260,7 +270,7 @@ export function onFriendInfoChanged() {
           },
           {
             changetype: 1,
-            memberid: 1002,
+            memberid: 1006,
             clusterid: 38976,
             wechatid: "wxid_0j5gpp6unncs22",
             wechatno: "",
@@ -274,7 +284,7 @@ export function onFriendInfoChanged() {
           },
           {
             changetype: 1,
-            memberid: 1002,
+            memberid: 1007,
             clusterid: 38976,
             wechatid: "wxid_glmka4wodl0j21",
             wechatno: "",
@@ -307,43 +317,85 @@ export function onFriendInfoChanged() {
 
 // --- 事件接收器
 instance.$on(__events__.NEW_MESSAGE, function newMessage(messageInfo) {
-  console.log("--- process[" + __events__.NEW_MESSAGE + "]");
+  messageLog.info("--- process[" + __events__.NEW_MESSAGE + "]");
   let message = MessageFactory.getMessageInstance(messageInfo);
 });
+
 instance.$on(__events__.ON_MESSAGES, function onMessages(messageInfos) {
-  console.log("--- 接收一组消息---------------------------");
+  messageLog.info("--- 接收一组消息---------------------------");
 });
+
 instance.$on(__events__.FRIEND_INFO_CHANGED, function onFriendInfoChanged(friendInfo) {
-  console.log("--- process[" + __events__.FRIEND_INFO_CHANGED + "]");
+  messageLog.info("--- process[" + __events__.FRIEND_INFO_CHANGED + "]");
   let { friendsid, wechatid } = friendInfo;
   let friend = FriendFatory.getFriend(friendsid, wechatid);
+
+  //TODO: friend 可能存在，也可能是New
+  //更新需要特殊处理么？
   friend.setExtraInfo(friendInfo);
+
   let wechat, friendList;
-  wechat = friend.findSubordinateWechat();
+  wechat = friend.findSubordinator();
   friendList = wechat.getFriendList();
-  console.log("1.[ " + wechat.personalid + " ]的好友数：" + friendList.length, friendList);
 
   let { changetype } = friendInfo;
   switch (changetype) {
     case __changetype__.ADD:
-      friend.insertToWechat();
+      friend.establishSubordinate();
       break;
     case __changetype__.MODIFY:
       break;
     case __changetype__.REMOVE:
       friend.remove();
-      friend.removeByWechat();
-      friend.checkSubordinateWechatAvaliable();
+      friend.relieveSubordinate();
+      friend.checkSubordinatorAvaliable();
       break;
     default:
-      console.log("未能处理该好友操作类型：" + changetype);
+      messageLog.warn("未能处理该好友操作类型：" + changetype);
       break;
   }
-  friendList = friend.findSubordinateWechat().getFriendList();
-  console.log("2.[ " + wechat.personalid + " ]的好友数：" + friendList.length, friendList);
+  friendList = friend.findSubordinator().getFriendList();
+  messageLog.info("[ " + wechat.personalid + " ]的好友数：" + friendList.length, friendList);
 
-  console.log("wechats: ", WechatFactory.getWechats().length);
-  console.log("wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfosSize());
+  messageLog.info("wechats: ", WechatFactory.getWechats().length);
+  messageLog.info("wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos());
 });
+
+instance.$on(__events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged(chatroomInfo){
+  messageLog.info("--- process[" + __events__.CHATROOM_INFO_CHANGED + "]");
+  let { clusterid, wxchatroomid } = chatroomInfo;
+  let chatroom = ChatroomFactory.getChatroom(clusterid, wxchatroomid);
+  //TODO: chatroom 可能存在，也可能是New
+  //更新需要特殊处理么？
+  chatroom.setExtraInfo(chatroomInfo);
+
+  let wechat, chatroomList;
+  wechat = chatroom.findSubordinator();
+  chatroomList = wechat.getChatroomList();
+
+  let { changetype } = chatroomInfo;
+  switch (changetype) {
+    case __changetype__.ADD:
+      chatroom.establishSubordinate();
+      break;
+    case __changetype__.MODIFY:
+      break;
+    case __changetype__.REMOVE:
+      chatroom.remove();
+      chatroom.relieveSubordinate();
+      chatroom.checkSubordinatorAvaliable();
+      break;
+    default:
+      messageLog.warn("未能处理该群操作类型：" + changetype);
+      break;
+  }
+
+  chatroomList = chatroom.findSubordinator().getChatroomList();
+  messageLog.info("[ " + wechat.personalid + " ]的群数：" + chatroomList.length, chatroomList);
+
+  messageLog.info("wechats: ", WechatFactory.getWechats().length);
+  messageLog.info("wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos());
+});
+
 
 export default instance;

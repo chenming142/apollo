@@ -1,23 +1,31 @@
 import ExtraInfo from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
-import SubordinateMixin from "./subordinate";
+import SubordinatorMixin, {
+  SubordinateBehaviorMixin
+} from "./subordinate";
+import {
+  ChatroomMember
+} from './chatroomMember';
+
 import Logging from '../api/logging';
 
 const chatroomLog = Logging.getLogger('chatroom');
 
-export class Chatroom extends SubordinateMixin(ExtraInfo) {
+export class Chatroom extends SubordinateBehaviorMixin(SubordinatorMixin(ExtraInfo)) {
   constructor(clusterid, wxchatroomid) {
     super();
     this.clusterid = clusterid;
     this.wxchatroomid = wxchatroomid;
     this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo(wxchatroomid);
+    this.memberIds = new Set();
     this.setAttributes(Chatroom.attributes);
   }
   setExtraInfo(extraInfo) {
     this.wechatInfo.setExtraInfo(extraInfo);
     super.setExtraInfo(extraInfo);
-    this.checkSubordinateWechatNew();
+    this.checkSubordinatorNew();
     this.establishSubordinate();
+    this.generateMembers();
   }
   getExtraInfoByKey(key) {
     if (!this.attributes.has(key)) {
@@ -33,17 +41,35 @@ export class Chatroom extends SubordinateMixin(ExtraInfo) {
       return super.setExtraInfoByKey(key, val);
     }
   }
-  getNickname(){
+  getNickname() {
     return this.getExtraInfoByKey('clustername');
   }
-  getWechatid(){
+  getWechatid() {
     return this.getExtraInfoByKey('wxchatroomid');
   }
-  getHeadimgurl(){
+  getHeadimgurl() {
     return this.getExtraInfoByKey('headimgurl');
   }
-  getWechatno(){
+  getWechatno() {
     return this.getExtraInfoByKey('wxchatroomid');
+  }
+  generateMembers() {
+    const self = this;
+    let {
+      clusterid,
+      memberlist
+    } = self;
+    chatroomLog.info('群:' + clusterid + ', 的成员有' + memberlist.length + '个');
+    if (memberlist && memberlist.length > 0) {
+      memberlist.forEach(item => {
+        let {
+          memberid,
+          wechatid
+        } = item;
+        let chatroomMember = new ChatroomMember(memberid, wechatid);
+        chatroomMember.setExtraInfo(item);
+      });
+    }
   }
 
   remove() {
@@ -51,6 +77,19 @@ export class Chatroom extends SubordinateMixin(ExtraInfo) {
   }
   identity() {
     return this.clusterid;
+  }
+
+  getMemberList() {
+    let memberIds = [...this.memberIds];
+    return memberIds.length;
+  }
+
+  toString() {
+    const self = this;
+    let {
+      clusterid
+    } = self;
+    chatroomLog.info("群：" + clusterid + "，的群成员数：" + self.getMemberList());
   }
 }
 Chatroom.attributes = [
@@ -69,6 +108,7 @@ Chatroom.attributes = [
   "isreturnname",
   "returnname",
   "membercount",
+  "memberlist",
   "datastatus",
   "ownerallowflag",
   "messageunreadcount",
@@ -122,45 +162,44 @@ export default class ChatroomFactory {
   }
   static getChatroomByApi(clusterid) {
     chatroomLog.info("- 调用Api接口，获取好友：" + clusterid);
-    let chatroomList = [
-      {
-        personalid: 9661,
-        clusterid: 38891,
-        groupid: 0,
-        wxchatroomid: "22615851297@chatroom",
-        clustername: "016",
-        headimgurl: "http://wx.qlogo.cn/mmcrhead/6OXnmZ7zcgfnxeeiaGuiaJC93XfARZ7FaZTRLoywTqrTxpmAux6xTFEicv4unkcrhVnCjPzl1F2YGJ6AFDFEAs2wiboL5hZulIR8/0",
-        remark: "",
-        isowner: 1,
-        ownerwechatid: "wxid_2tvf9y1ndag622",
-        isreturnname: 0,
-        returnname: "",
-        membercount: 4,
-        datastatus: 2,
-        ownerallowflag: 0
-      },
-      {
-        personalid: 9661,
-        clusterid: 38976,
-        groupid: 0,
-        wxchatroomid: "22431750377@chatroom",
-        clustername: "555555555",
-        headimgurl: "http://wx.qlogo.cn/mmcrhead/oyG9nzLg9aKj5WxDZTeqktjq3l82kw1B3rDp9ny8HHH9ic5eEzAicUmP1YdzY7jH8lVorRlGeibfHrrmFW17A9PmKbgpCS7wBt2/0",
-        remark: "",
-        isowner: 1,
-        ownerwechatid: "wxid_2tvf9y1ndag622",
-        isreturnname: 0,
-        returnname: "",
-        membercount: 6,
-        datastatus: 2,
-        ownerallowflag: 0
-      }
-    ];
+    let chatroomList = [{
+      personalid: 9661,
+      clusterid: 38891,
+      groupid: 0,
+      wxchatroomid: "22615851297@chatroom",
+      clustername: "016",
+      headimgurl: "http://wx.qlogo.cn/mmcrhead/6OXnmZ7zcgfnxeeiaGuiaJC93XfARZ7FaZTRLoywTqrTxpmAux6xTFEicv4unkcrhVnCjPzl1F2YGJ6AFDFEAs2wiboL5hZulIR8/0",
+      remark: "",
+      isowner: 1,
+      ownerwechatid: "wxid_2tvf9y1ndag622",
+      isreturnname: 0,
+      returnname: "",
+      membercount: 4,
+      datastatus: 2,
+      ownerallowflag: 0
+    }, {
+      personalid: 9661,
+      clusterid: 38976,
+      groupid: 0,
+      wxchatroomid: "22431750377@chatroom",
+      clustername: "555555555",
+      headimgurl: "http://wx.qlogo.cn/mmcrhead/oyG9nzLg9aKj5WxDZTeqktjq3l82kw1B3rDp9ny8HHH9ic5eEzAicUmP1YdzY7jH8lVorRlGeibfHrrmFW17A9PmKbgpCS7wBt2/0",
+      remark: "",
+      isowner: 1,
+      ownerwechatid: "wxid_2tvf9y1ndag622",
+      isreturnname: 0,
+      returnname: "",
+      membercount: 6,
+      datastatus: 2,
+      ownerallowflag: 0
+    }];
     let chatroomInfo = chatroomList.find(item => item.clusterid === clusterid);
     if (!chatroomInfo) {
       chatroomLog.error("- 调用Api接口，获取群：" + clusterid + ",失败~");
     }
-    let { wxchatroomid } = chatroomInfo;
+    let {
+      wxchatroomid
+    } = chatroomInfo;
     let chatroom = this.getChatroom(clusterid, wxchatroomid);
     chatroom.setExtraInfo(chatroomInfo);
   }

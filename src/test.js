@@ -1,6 +1,8 @@
-// import "./test/test4msg";
+import Logging from './api/logging';
 
-import "./test/testgenerate";
+import "./test/test4msg";
+
+// import "./test/testgenerate";
 
 
 import "./test/test4wechat";

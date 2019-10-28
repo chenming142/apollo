@@ -1,12 +1,12 @@
 import ExtraInfo from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
-import SubordinateMixin from "./subordinate";
+import SubordinatorMixin from "./subordinate";
 
 import Logging from '../api/logging';
 
 const friendLog = Logging.getLogger('friend');
 
-export class Friend extends SubordinateMixin(ExtraInfo) {
+export class Friend extends SubordinatorMixin(ExtraInfo) {
   constructor(friendid, wechatid) {
     super();
     this.friendid = friendid;
@@ -16,7 +16,7 @@ export class Friend extends SubordinateMixin(ExtraInfo) {
   setExtraInfo(extraInfo) {
     this.wechatInfo.setExtraInfo(extraInfo);
     super.setExtraInfo(extraInfo);
-    this.checkSubordinateWechatNew();
+    this.checkSubordinatorNew();
     this.establishSubordinate();
   }
   getExtraInfoByKey(key) {

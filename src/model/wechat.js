@@ -3,12 +3,13 @@ import WechatInfoFlyweightFactory from "./wechatInfo";
 import FriendFatory, { Friend } from "./friend";
 import ChatroomFactory, { Chatroom } from "./chatroom";
 import { RecentFlyweightFactory, Recent } from "./recent";
+import { SubordinateBehaviorMixin } from './subordinate';
 
 import Logging from '../api/logging';
 
 const wechatLog = Logging.getLogger('wechat');
 
-export class Wechat extends ExtraInfo {
+export class Wechat extends SubordinateBehaviorMixin(ExtraInfo) {
   constructor(personalid, wechatid) {
     super();
     this.personalid = personalid;
@@ -91,35 +92,6 @@ export class Wechat extends ExtraInfo {
     WechatFactory.delete(this.personalid);
   }
 
-  getSubordinate(clazz) {
-    if (clazz instanceof Friend) {
-      return this.friendIds;
-    } else if (clazz instanceof Chatroom) {
-      return this.chatroomIds;
-    } else if (clazz instanceof Recent) {
-      return this.uniqKeys;
-    }
-  }
-  establish(identity, clazz) {
-    const self = this;
-    let subordinate = self.getSubordinate(clazz);
-    if (!subordinate.has(identity)) {
-      subordinate.add(identity);
-    }
-  }
-  relieve(identity, clazz) {
-    const self = this;
-    let subordinate = self.getSubordinate(clazz);
-    if (subordinate.has(identity)) {
-      subordinate.delete(identity);
-    }
-  }
-  clear(clazz) {
-    const self = this;
-    let subordinate = self.getSubordinate(clazz);
-    subordinate.clear();
-  }
-
   getFriendList() {
     let friendIds = [...this.friendIds];
     return FriendFatory.getFriendsByFriendIds(friendIds);
@@ -199,7 +171,7 @@ export default class WechatFactory {
     })();
   }
   static getWechatByApi(personalid) {
-    console.log("- 调用Api接口，获取个人号：" + personalid);
+    wechatLog.info("- 调用Api接口，获取个人号：" + personalid);
     let _wechats = [
       {
         personalid: 9661,
@@ -211,13 +183,22 @@ export default class WechatFactory {
         onlinestatus: 1
       },
       {
-        personalid: 9658,
+        personalid: 9676,
         wechatid: "wxid_peib914d9kw222",
         wechatno: "",
         nickname: "爱拼不会赢1",
         headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/KhHc3zD3ESlsAFLoLypHqjEZWHvSkknOdoYk09xoTEmHwjblnibPKScDGAepMicR4CqwN0MicIWIqwxxqS1yzqJdichbZLy8icn3POEb94rZhEHE/0",
         remark: "",
         onlinestatus: 1
+      },
+      {
+        personalid: 9658,
+        wechatid: "wxid_xin84739fdfhd089",
+        wechatno: "",
+        nickname: "爱河中划船",
+        headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/KhHc3zD3ESlsAFLoLypHqjEZWHvSkknOdoYk09xoTEmHwjblnibPKScDGAepMicR4CqwN0MicIWIqwxxqS1yzqJdichbZLy8icn3POEb94rZhEHE/0",
+        remark: "",
+        onlinestatus: 0
       }
     ];
     let wechatInfo = _wechats.find(item => item.personalid === personalid);

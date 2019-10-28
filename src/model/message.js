@@ -1,12 +1,17 @@
 import ExtraInfo from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
+
 import constants from "../utils/constants";
+
+import Logging from '../api/logging';
+
+const messageLog = Logging.getLogger('message');
 
 const __msgtype__ = constants.MSG_TYPE;
 
 export class Message extends ExtraInfo {
   constructor(locmsgid) {
-    console.log("- Message.ctor: " + locmsgid);
+    messageLog.info("- Message.ctor: " + locmsgid);
     super();
     this.locmsgid = locmsgid;
     this.setAttributes(Message.attributes);
@@ -45,7 +50,7 @@ function CommonMixin(Base) {
 function NormalizedMixin(Base) {
   return class NormalizedMessage extends Base {
     constructor(...args) {
-      console.log("- NormalizedMessage.ctor: " + args[0]);
+      messageLog.info("- NormalizedMessage.ctor: " + args[0]);
       super(...args);
       this.normalized();
     }
@@ -92,7 +97,7 @@ class CallingMessage {}
 class TransferKFMessage extends NormalizedMixin(Message) {
   constructor(messageInfo) {
     let { locmsgid } = messageInfo;
-    console.log("- TransferKFMessage.ctor: " + locmsgid);
+    messageLog.info("- TransferKFMessage.ctor: " + locmsgid);
     super(locmsgid);
     this.msgBrief = "[系统消息]";
   }

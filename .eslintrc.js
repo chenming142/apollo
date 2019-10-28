@@ -62,6 +62,11 @@ module.exports = {
     'lines-between-class-members': 0,
     'prefer-const': 0,
     'new-cap': 0,
+    'lines-around-comment': 0,
+    'space-infix-ops': 0,
+    'keyword-spacing': 0,
+    'no-trailing-spaces': 0,
+    'no-else-return': 0,
     // debugger使用
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
     // 开发模式允许使用console
