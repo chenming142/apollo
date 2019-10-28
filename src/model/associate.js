@@ -12,11 +12,11 @@ const AssociateMixin = Base =>
       let { chattargetid, chattargettype } = this;
       switch (chattargettype) {
         case __chattargettype__.friend:
-          console.log("- friend.checkAssociateRefNew", chattargetid);
+          // console.log("- friend.checkAssociateRefNew", chattargetid);
           FriendFatory.checkFriendNew(chattargetid);
           break;
         case __chattargettype__.chatroom:
-          console.log("- chatroom.checkAssociateRefNew", chattargetid);
+          // console.log("- chatroom.checkAssociateRefNew", chattargetid);
           ChatroomFatory.checkChatroomNew(chattargetid);
           break;
         default:

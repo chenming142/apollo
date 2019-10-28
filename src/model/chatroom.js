@@ -3,11 +3,11 @@ import WechatInfoFlyweightFactory from "./wechatInfo";
 import SubordinateMixin from "./subordinate";
 
 export class Chatroom extends SubordinateMixin(ExtraInfo) {
-  constructor(clusterid, wechatroomid) {
+  constructor(clusterid, wxchatroomid) {
     super();
     this.clusterid = clusterid;
-    this.wechatroomid = wechatroomid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo(wechatroomid);
+    this.wxchatroomid = wxchatroomid;
+    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo(wxchatroomid);
     this.setAttributes(Chatroom.attributes);
   }
   setExtraInfo(extraInfo) {
@@ -29,6 +29,18 @@ export class Chatroom extends SubordinateMixin(ExtraInfo) {
     } else {
       return super.setExtraInfoByKey(key, val);
     }
+  }
+  getNickname(){
+    return this.getExtraInfoByKey('clustername');
+  }
+  getWechatid(){
+    return this.getExtraInfoByKey('wxchatroomid');
+  }
+  getHeadimgurl(){
+    return this.getExtraInfoByKey('headimgurl');
+  }
+  getWechatno(){
+    return this.getExtraInfoByKey('wxchatroomid');
   }
 
   remove() {
@@ -63,13 +75,13 @@ Chatroom.attributes = [
 ];
 
 export default class ChatroomFactory {
-  static getChatroom(clusterid, wechatroomid) {
+  static getChatroom(clusterid, wxchatroomid) {
     const self = this;
     let chatrooms = self.getChatrooms();
     if (chatrooms.has(clusterid)) {
       return chatrooms.get(clusterid);
     } else {
-      let chatroom = new Chatroom(clusterid, wechatroomid);
+      let chatroom = new Chatroom(clusterid, wxchatroomid);
       chatrooms.set(clusterid, chatroom);
       return chatroom;
     }

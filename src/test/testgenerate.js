@@ -4,4 +4,8 @@ import GeneratorFactory from "../api/generate";
   GeneratorFactory.generateWechat(10);
 
   GeneratorFactory.generateFriend(20);
+
+  GeneratorFactory.generateChatroom(30);
+
+  GeneratorFactory.generateRecent(100);
 })();

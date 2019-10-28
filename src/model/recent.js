@@ -20,11 +20,12 @@ export class Recent extends AssociateMixin(SubordinateMixin(ExtraInfo)) {
     this.setAttributes(Recent.attributes);
   }
   getUniqKey() {
-    let { personalid, chattargettype, wechatid } = this;
+    let { personalid, chattargettype } = this;
+    let wechatid = this.getExtraInfoByKey('wechatid');
     return personalid + "-" + chattargettype + "-" + wechatid;
   }
   setExtraInfo(extraInfo) {
-    console.log("- Recent.setExtraInfo", extraInfo);
+    // console.log("- Recent.setExtraInfo", extraInfo);
     this.wechatInfo.setExtraInfo(extraInfo);
     super.setExtraInfo(extraInfo);
     this.checkSubordinateWechatNew();
@@ -86,9 +87,11 @@ export default class RecentFactory {
     let _recent = RecentFactory.getRecentInstance(recent);
     _recent.setExtraInfo(recentInfo);
 
-    let { lastmsg } = recentInfo;
-    let message = MessageFactory.getMessageInstance(lastmsg);
-    // _recent.setLastmsgInfo(message);
+    let { lastmsg } = recentInfo, message;
+    if(lastmsg){
+      message = MessageFactory.getMessageInstance(lastmsg);
+      // _recent.setLastmsgInfo(message);
+    }
 
     return recent;
   }

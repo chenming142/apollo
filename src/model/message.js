@@ -142,6 +142,8 @@ export default class MessageFactory {
 export class MessageFlyweightFactory {
   static buildMessageInstance(messageInfo) {
     const self = this;
+    if(!messageInfo) return;
+    
     if (messageInfo instanceof Message) {
       return self.getMessage(Message);
     } else {

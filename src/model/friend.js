@@ -29,6 +29,20 @@ export class Friend extends SubordinateMixin(ExtraInfo) {
       return super.setExtraInfoByKey(key, val);
     }
   }
+  getNickname(){
+    return this.getExtraInfoByKey('nickname');
+  }
+  getWechatid(){
+    return this.getExtraInfoByKey('wechatid');
+  }
+  getHeadimgurl(){
+    return this.getExtraInfoByKey('headimgurl');
+  }
+  getWechatno(){
+    return this.getExtraInfoByKey('wechatno');
+  }
+
+
   remove() {
     FriendFatory.delete(this.friendid);
   }
