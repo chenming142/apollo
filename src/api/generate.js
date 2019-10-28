@@ -6,6 +6,10 @@ import FriendFatory from '../model/friend';
 import ChatroomFactory from '../model/chatroom';
 import RecentFactory from '../model/recent';
 
+const wechatLog = Logging.getLogger('wechat');
+const chatroomLog = Logging.getLogger('chatroom');
+const friendLog = Logging.getLogger('friend');
+const recentLog = Logging.getLogger('recent');
 
 import {
   generateRdNum
@@ -88,13 +92,14 @@ export class Generator {
 
     let chattargetid = chattargetids.getRdItem();
     let chattarget = chattargets.get(chattargetid);
-    console.log('- 1.generateRecent.chattarget:{chattargettype: ' + chattargettype + ', chattargetid: ' + chattargetid + '} ');
+    recentLog.info('- 1.generateRecent.chattarget:{chattargettype: ' + chattargettype + ', chattargetid: ' + chattargetid + '} ');
 
     let nickname = chattarget.getNickname(),
       wechatid = chattarget.getWechatid(),
       headimgurl = chattarget.getHeadimgurl();
-    console.log('- 2.generateRecent.chattarget:{nickname: ' + nickname + ', wechatid: ' + wechatid + ', headimgurl:' + headimgurl + '}');
-    console.log('')
+    recentLog.info('- 2.generateRecent.chattarget:{nickname: ' + nickname + ', wechatid: ' + wechatid + ', headimgurl:' + headimgurl + '}');
+    console.log('');
+    
     return Mock.mock({
       personalid: chattarget['personalid'],
       chattargettype: chattargettype,
@@ -115,13 +120,13 @@ export class Generator {
 
 export default class GeneratorFactory {
   static generateWechat(num) {
-    Logging.info("- generateWechat: " + num);
+    wechatLog.info("- generateWechat: " + num);
     let wechatInfos = Array.from({
         length: num
       }, () =>
       Generator.generateWechat()
     );
-    Logging.info(wechatInfos);
+    wechatLog.info(wechatInfos);
     wechatInfos.forEach(item => {
       let {
         personalid,
@@ -132,13 +137,13 @@ export default class GeneratorFactory {
     });
   }
   static generateFriend(num) {
-    Logging.info("- generateFriend: " + num);
+    friendLog.info("- generateFriend: " + num);
     let friends = Array.from({
         length: num
       }, () =>
       Generator.generateFriend()
     );
-    Logging.info(friends);
+    friendLog.info(friends);
     friends.forEach(item => {
       let {
         friendsid,
@@ -149,11 +154,11 @@ export default class GeneratorFactory {
     });
   }
   static generateChatroom(num) {
-    Logging.info("- generateChatroom: " + num);
+    chatroomLog.info("- generateChatroom: " + num);
     let chatrooms = Array.from({
       length: num
     }, () => Generator.generateChatroom());
-    Logging.info(chatrooms);
+    chatroomLog.info(chatrooms);
     chatrooms.forEach(item => {
       let {
         clusterid,
@@ -164,7 +169,7 @@ export default class GeneratorFactory {
     });
   }
   static generateRecent(num) {
-    Logging.info("- generateRecent: " + num);
+    recentLog.info("- generateRecent: " + num);
     let recents = new Map();
     for (let i = 0; i < num; i++) {
       let recentInfo = Generator.generateRecent();
@@ -172,6 +177,6 @@ export default class GeneratorFactory {
       recent.setExtraInfo(recentInfo);
       recents.set(recent.getUniqKey(), recent);
     }
-    Logging.info(recents);
+    recentLog.info(recents);
   }
 }

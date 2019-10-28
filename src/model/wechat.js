@@ -4,6 +4,10 @@ import FriendFatory, { Friend } from "./friend";
 import ChatroomFactory, { Chatroom } from "./chatroom";
 import { RecentFlyweightFactory, Recent } from "./recent";
 
+import Logging from '../api/logging';
+
+const wechatLog = Logging.getLogger('wechat');
+
 export class Wechat extends ExtraInfo {
   constructor(personalid, wechatid) {
     super();
@@ -131,7 +135,7 @@ export class Wechat extends ExtraInfo {
   toString() {
     const self = this;
     let { personalid } = self;
-    console.log("个人号：" + personalid + ",好友：" + self.getFriendList().length + ",群：" + self.getChatroomList().length + ",最近联系人：" + self.getRecentList().length);
+    wechatLog.info("个人号：" + personalid + ",好友：" + self.getFriendList().length + ",群：" + self.getChatroomList().length + ",最近联系人：" + self.getRecentList().length);
   }
 }
 Wechat.attributes = ["personalid", "onlinestatus", "notthroughcount"];

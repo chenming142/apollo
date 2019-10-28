@@ -1,6 +1,9 @@
 import ExtraInfo from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
 import SubordinateMixin from "./subordinate";
+import Logging from '../api/logging';
+
+const chatroomLog = Logging.getLogger('chatroom');
 
 export class Chatroom extends SubordinateMixin(ExtraInfo) {
   constructor(clusterid, wxchatroomid) {
@@ -118,7 +121,7 @@ export default class ChatroomFactory {
     })();
   }
   static getChatroomByApi(clusterid) {
-    console.log("- 调用Api接口，获取好友：" + clusterid);
+    chatroomLog.info("- 调用Api接口，获取好友：" + clusterid);
     let chatroomList = [
       {
         personalid: 9661,
@@ -155,7 +158,7 @@ export default class ChatroomFactory {
     ];
     let chatroomInfo = chatroomList.find(item => item.clusterid === clusterid);
     if (!chatroomInfo) {
-      throw Error("- 调用Api接口，获取群：" + clusterid + ",失败~");
+      chatroomLog.error("- 调用Api接口，获取群：" + clusterid + ",失败~");
     }
     let { wxchatroomid } = chatroomInfo;
     let chatroom = this.getChatroom(clusterid, wxchatroomid);

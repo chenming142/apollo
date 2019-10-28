@@ -2,6 +2,10 @@ import ExtraInfo from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
 import SubordinateMixin from "./subordinate";
 
+import Logging from '../api/logging';
+
+const friendLog = Logging.getLogger('friend');
+
 export class Friend extends SubordinateMixin(ExtraInfo) {
   constructor(friendid, wechatid) {
     super();
@@ -96,7 +100,7 @@ export default class FriendFatory {
     })();
   }
   static getFriendByApi(friendid) {
-    console.log("- 调用Api接口，获取好友：" + friendid);
+    friendLog.info("- 调用Api接口，获取好友：" + friendid);
     let friendList = [
       {
         personalid: 9658,
@@ -237,7 +241,7 @@ export default class FriendFatory {
     ];
     let friendInfo = friendList.find(item => item.friendsid === friendid);
     if (!friendInfo) {
-      throw Error("- 调用Api接口，获取好友：" + friendid + ",失败~");
+      friendLog.error("- 调用Api接口，获取好友：" + friendid + ",失败~");
     }
     let { wechatid } = friendInfo;
     let friend = this.getFriend(friendid, wechatid);
