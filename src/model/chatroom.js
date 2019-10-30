@@ -1,96 +1,91 @@
-import ExtraInfo from "./extraInfo";
+import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
 import WechatInfoFlyweightFactory from "./wechatInfo";
-import SubordinatorMixin, {
-  SubordinateBehaviorMixin
-} from "./subordinate";
-import {
-  ChatroomMember
-} from './chatroomMember';
+import SubordinatorMixin, { SubordinateBehaviorMixin } from "./subordinate";
+import { ChatroomMember } from './chatroomMember';
+import constants from "../utils/constants";
 
 import Logging from '../api/logging';
 
-const chatroomLog = Logging.getLogger('chatroom');
+const chatroomLog = Logging.getLogger( 'chatroom' );
+const __changetype__ = constants.CHANGETYPE;
 
-export class Chatroom extends SubordinateBehaviorMixin(SubordinatorMixin(ExtraInfo)) {
-  constructor(clusterid, wxchatroomid) {
+export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) ) {
+  constructor( clusterid, wxchatroomid ) {
     super();
     this.clusterid = clusterid;
     this.wxchatroomid = wxchatroomid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo(wxchatroomid);
+    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wxchatroomid );
     this.memberIds = new Set();
-    this.setAttributes(Chatroom.attributes);
+    this.setAttributes( Chatroom.attributes );
   }
-  setExtraInfo(extraInfo) {
-    this.wechatInfo.setExtraInfo(extraInfo);
-    super.setExtraInfo(extraInfo);
+  setExtraInfo( extraInfo ) {
+    this.wechatInfo.setExtraInfo( extraInfo );
+    super.setExtraInfo( extraInfo );
     this.checkSubordinatorNew();
     this.establishSubordinate();
     this.generateMembers();
+    this.calcMessageunreadcount();
   }
-  getExtraInfoByKey(key) {
-    if (!this.attributes.has(key)) {
-      return this.wechatInfo.getExtraInfoByKey(key);
-    } else {
-      return super.getExtraInfoByKey(key);
+  getNickname() { return this.getExtraInfoByKey( 'clustername' ); }
+  getWechatid() { return this.getExtraInfoByKey( 'wxchatroomid' ); }
+
+  calcMessageunreadcount() {
+    const self = this;
+    let { changetype, messageunreadcount } = self;
+    if ( messageunreadcount ) {
+      let wechat = self.findSubordinator();
+      switch ( changetype ) {
+        case __changetype__.ADD:
+          break;
+        case __changetype__.MODIFY:
+          //TODO: 修改如何处理 ？
+          messageunreadcount = 0;
+          break;
+        case __changetype__.REMOVE:
+          messageunreadcount *= -1;
+          break;
+      }
+      wechat.calcUnreadmsgcnt( messageunreadcount );
     }
   }
-  setExtraInfoByKey(key, val) {
-    if (!this.attributes.has(key)) {
-      return this.wechatInfo.setExtraInfoByKey(key, val);
-    } else {
-      return super.setExtraInfoByKey(key, val);
+  onChatroomInfoChangeHandle( changetype ) {
+    const self = this;
+    switch ( changetype ) {
+      case __changetype__.ADD:
+        self.establishSubordinate();
+        break;
+      case __changetype__.MODIFY:
+        break;
+      case __changetype__.REMOVE:
+        self.remove();
+        self.relieveSubordinate();
+        self.checkSubordinatorAvaliable();
+        break;
+      default:
+        chatroomLog.warn( "未能处理该群操作类型：" + changetype );
+        break;
     }
   }
-  getNickname() {
-    return this.getExtraInfoByKey('clustername');
-  }
-  getWechatid() {
-    return this.getExtraInfoByKey('wxchatroomid');
-  }
-  getHeadimgurl() {
-    return this.getExtraInfoByKey('headimgurl');
-  }
-  getWechatno() {
-    return this.getExtraInfoByKey('wxchatroomid');
-  }
+
   generateMembers() {
     const self = this;
-    let {
-      clusterid,
-      memberlist
-    } = self;
-    chatroomLog.info('群:' + clusterid + ', 的成员有' + memberlist.length + '个');
-    if (memberlist && memberlist.length > 0) {
-      memberlist.forEach(item => {
-        let {
-          memberid,
-          wechatid
-        } = item;
-        let chatroomMember = new ChatroomMember(memberid, wechatid);
-        chatroomMember.setExtraInfo(item);
-      });
+    let { clusterid, memberlist } = self;
+    chatroomLog.info( '群:' + clusterid + ', 的成员有' + memberlist.length + '个' );
+    if ( memberlist && memberlist.length > 0 ) {
+      memberlist.forEach( item => {
+        let { memberid, wechatid } = item;
+        let chatroomMember = new ChatroomMember( memberid, wechatid );
+        chatroomMember.setExtraInfo( item );
+      } );
     }
   }
-
-  remove() {
-    ChatroomFactory.delete(this.clusterid);
-  }
-  identity() {
-    return this.clusterid;
-  }
-
   getMemberList() {
-    let memberIds = [...this.memberIds];
+    let memberIds = [ ...this.memberIds ];
     return memberIds.length;
   }
-
-  toString() {
-    const self = this;
-    let {
-      clusterid
-    } = self;
-    chatroomLog.info("群：" + clusterid + "，的群成员数：" + self.getMemberList());
-  }
+  remove() { ChatroomFactory.delete( this.clusterid ); }
+  identity() { return this.clusterid; }
+  toString() { chatroomLog.info( "群：" + this.clusterid + "，的群成员数：" + this.getMemberList() ); }
 }
 Chatroom.attributes = [
   "changetype",
@@ -118,51 +113,49 @@ Chatroom.attributes = [
 ];
 
 export default class ChatroomFactory {
-  static getChatroom(clusterid, wxchatroomid) {
+  static getChatroom( clusterid, wxchatroomid ) {
     const self = this;
     let chatrooms = self.getChatrooms();
-    if (chatrooms.has(clusterid)) {
-      return chatrooms.get(clusterid);
+    if ( chatrooms.has( clusterid ) ) {
+      return chatrooms.get( clusterid );
     } else {
-      let chatroom = new Chatroom(clusterid, wxchatroomid);
-      chatrooms.set(clusterid, chatroom);
+      let chatroom = new Chatroom( clusterid, wxchatroomid );
+      chatrooms.set( clusterid, chatroom );
       return chatroom;
     }
   }
-  static checkChatroomNew(clusterid) {
+  static checkChatroomNew( clusterid ) {
     const self = this;
-    if (!self.getChatrooms().has(clusterid)) {
-      self.getChatroomByApi(clusterid);
+    if ( !self.getChatrooms().has( clusterid ) ) {
+      self.getChatroomByApi( clusterid );
     }
   }
-  static getChatroomsByClusterIds(clusterIds = []) {
+  static getChatroomsByClusterIds( clusterIds = [] ) {
     const self = this;
     let chatrooms = self.getChatrooms();
-    return clusterIds.reduce((ret, clusterId) => ret.concat([chatrooms.get(clusterId)]), []);
+    return clusterIds.reduce( ( ret, clusterId ) => ret.concat( [ chatrooms.get( clusterId ) ] ), [] );
   }
-  delete(clusterId) {
+  static delete( clusterId ) {
     const self = this;
     let chatrooms = self.getChatrooms();
-    if (chatrooms.has(clusterId)) {
-      chatrooms.delete(clusterId);
+    if ( chatrooms.has( clusterId ) ) {
+      chatrooms.delete( clusterId );
     }
   }
-  static getChatrooms() {
-    return this.getInstance().chatrooms;
-  }
+  static getChatrooms() { return this.getInstance().chatrooms; }
   static getInstance() {
     const ctor = this;
-    return (function() {
-      if (!ctor.instance) {
+    return ( function () {
+      if ( !ctor.instance ) {
         ctor.instance = new ctor();
         ctor.instance.chatrooms = new Map();
       }
       return ctor.instance;
-    })();
+    } )();
   }
-  static getChatroomByApi(clusterid) {
-    chatroomLog.info("- 调用Api接口，获取好友：" + clusterid);
-    let chatroomList = [{
+  static getChatroomByApi( clusterid ) {
+    chatroomLog.info( "- 调用Api接口，获取好友：" + clusterid );
+    let chatroomList = [ {
       personalid: 9661,
       clusterid: 38891,
       groupid: 0,
@@ -192,15 +185,13 @@ export default class ChatroomFactory {
       membercount: 6,
       datastatus: 2,
       ownerallowflag: 0
-    }];
-    let chatroomInfo = chatroomList.find(item => item.clusterid === clusterid);
-    if (!chatroomInfo) {
-      chatroomLog.error("- 调用Api接口，获取群：" + clusterid + ",失败~");
+    } ];
+    let chatroomInfo = chatroomList.find( item => item.clusterid === clusterid );
+    if ( !chatroomInfo ) {
+      chatroomLog.error( "- 调用Api接口，获取群：" + clusterid + ",失败~" );
     }
-    let {
-      wxchatroomid
-    } = chatroomInfo;
-    let chatroom = this.getChatroom(clusterid, wxchatroomid);
-    chatroom.setExtraInfo(chatroomInfo);
+    let { wxchatroomid } = chatroomInfo;
+    let chatroom = this.getChatroom( clusterid, wxchatroomid );
+    chatroom.setExtraInfo( chatroomInfo );
   }
 }
