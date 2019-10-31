@@ -1,18 +1,19 @@
+import '../utils/helper';
+
 export default class ExtraInfo {
   constructor() {
     this.attributes = new Set();
+  }
+  setAttributes( attributes ) {
+    this.attributes = new Set( attributes );
   }
   setExtraInfo( extraInfo = {} ) {
     const self = this;
     for ( var k in extraInfo ) {
       if ( self.attributes.has( k ) ) {
-        // console.log('- super-----has->'+ self.attributes.has(k) +', k: '+k, extraInfo[k]);
         self[ k ] = extraInfo[ k ];
       }
     }
-  }
-  setAttributes( attributes ) {
-    this.attributes = new Set( attributes );
   }
   getExtraInfoByKey( key ) {
     const self = this;
@@ -35,6 +36,7 @@ export function ExtraInfoMixin( Base ) {
   return class ExtraInfoBehavior extends Base {
     constructor( ...args ) {
       super( ...args );
+      this._specificPropertiesMethod();
     }
     getExtraInfoByKey( key ) {
       if ( !this.attributes.has( key ) && this.wechatInfo ) {
@@ -50,41 +52,21 @@ export function ExtraInfoMixin( Base ) {
         return super.setExtraInfoByKey( key, val );
       }
     }
-    getNickname() {
-      if ( !this.attributes.has( key ) ) {
-        if ( this.wechatInfo ) {
-          return this.wechatInfo.getExtraInfoByKey( 'nickname' );
+    _specificPropertiesMethod() {
+      const self = this;
+      const SPECIFIC_PROPERTIES_LIST = [ 'nickname', 'wechatid', 'headimgurl', 'wechatno' ];
+
+      SPECIFIC_PROPERTIES_LIST.forEach( property => {
+        self[ 'get' + property.capitalize() ] = function () {
+          if ( !self.attributes.has( property ) ) {
+            if ( self.wechatInfo ) {
+              return self.wechatInfo.getExtraInfoByKey( property );
+            }
+          } else {
+            return self.getExtraInfoByKey( property );
+          }
         }
-      } else {
-        return this.getExtraInfoByKey( 'nickname' );
-      }
-    }
-    getWechatid() {
-      if ( !this.attributes.has( key ) ) {
-        if ( this.wechatInfo ) {
-          return this.wechatInfo.getExtraInfoByKey( 'wechatid' );
-        }
-      } else {
-        return this.getExtraInfoByKey( 'wechatid' );
-      }
-    }
-    getHeadimgurl() {
-      if ( !this.attributes.has( key ) ) {
-        if ( this.wechatInfo ) {
-          return this.wechatInfo.getExtraInfoByKey( 'headimgurl' );
-        }
-      } else {
-        return this.getExtraInfoByKey( 'headimgurl' );
-      }
-    }
-    getWechatno() {
-      if ( !this.attributes.has( key ) ) {
-        if ( this.wechatInfo ) {
-          return this.wechatInfo.getExtraInfoByKey( 'wechatno' );
-        }
-      } else {
-        return this.getExtraInfoByKey( 'wechatno' );
-      }
+      } );
     }
   }
 }
