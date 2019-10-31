@@ -1,13 +1,17 @@
 <template>
   <div id="app">
-    <img width="25%" src="./assets/logo.png">
+    <MainAsideList></MainAsideList>
   </div>
 </template>
 
 <script>
+import MainAsideList from './components/main-aside-list.vue'
 
 export default {
   name: "App",
+  components: {
+    MainAsideList
+  }
 };
 </script>
 
