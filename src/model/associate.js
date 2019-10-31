@@ -1,6 +1,9 @@
 import FriendFatory from "./friend";
 import ChatroomFatory from "./chatroom";
 import constants from "../utils/constants";
+import Logging from '../api/logging';
+
+const associateLog = Logging.getLogger( 'associate' );
 const __chattargettype__ = constants.CHAT_TARGET_TYPE;
 
 const AssociateMixin = Base =>
@@ -12,11 +15,11 @@ const AssociateMixin = Base =>
       let { chattargetid, chattargettype } = this;
       switch ( chattargettype ) {
         case __chattargettype__.friend:
-          // console.log("- friend.checkAssociateRefNew", chattargetid);
+          associateLog.info( "- friend.checkAssociateRefNew", chattargetid );
           FriendFatory.checkFriendNew( chattargetid );
           break;
         case __chattargettype__.chatroom:
-          // console.log("- chatroom.checkAssociateRefNew", chattargetid);
+          associateLog.info( "- chatroom.checkAssociateRefNew", chattargetid );
           ChatroomFatory.checkChatroomNew( chattargetid );
           break;
         default:

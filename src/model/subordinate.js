@@ -32,16 +32,16 @@ export default function SubordinatorMixin( Base ) {
     }
     findSubordinator() {
       let subordinator, subordinateKey;
-      if ( this instanceof Friend || this instanceof Chatroom ) {
-        let { personalid } = this;
-        subordinateKey = personalid;
-        subordinator = WechatFactory.getWechat( subordinateKey );
-      }
       if ( this instanceof ChatroomMember ) {
         let { clusterid } = this;
         subordinateKey = clusterid;
         subordinator = ChatroomFactory.getChatroom( subordinateKey );
+      } else {
+        let { personalid } = this;
+        subordinateKey = personalid;
+        subordinator = WechatFactory.getWechat( subordinateKey );
       }
+
       if ( subordinator ) {
         return subordinator;
       } else {

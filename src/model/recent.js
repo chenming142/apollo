@@ -25,10 +25,9 @@ export class Recent extends AssociateMixin( SubordinatorMixin( ExtraInfoMixin( E
     return personalid + "-" + chattargettype + "-" + wechatid;
   }
   setExtraInfo( extraInfo ) {
-    // console.log("- Recent.setExtraInfo", extraInfo);
     this.wechatInfo.setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
-    this.checkSubordinateWechatNew();
+    this.checkSubordinatorNew();
     this.establishSubordinate();
     this.checkAssociateRefNew();
   }
@@ -67,7 +66,6 @@ export default class RecentFactory {
     let { lastmsg } = recentInfo, message;
     if ( lastmsg ) {
       message = MessageFactory.getMessageInstance( lastmsg );
-      // _recent.setLastmsgInfo(message);
     }
 
     return recent;

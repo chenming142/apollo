@@ -70,8 +70,8 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
   generateMembers() {
     const self = this;
     let { clusterid, memberlist } = self;
-    chatroomLog.info( '群:' + clusterid + ', 的成员有' + memberlist.length + '个' );
     if ( memberlist && memberlist.length > 0 ) {
+      chatroomLog.info( '- generateMembers -> 群:' + clusterid + ', 的成员有' + memberlist.length + '个' );
       memberlist.forEach( item => {
         let { memberid, wechatid } = item;
         let chatroomMember = new ChatroomMember( memberid, wechatid );
@@ -85,7 +85,7 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
   }
   remove() { ChatroomFactory.delete( this.clusterid ); }
   identity() { return this.clusterid; }
-  toString() { chatroomLog.info( "群：" + this.clusterid + "，的群成员数：" + this.getMemberList() ); }
+  toString() { chatroomLog.info( "- toString -> 群：" + this.clusterid + "，的群成员数：" + this.getMemberList() ); }
 }
 Chatroom.attributes = [
   "changetype",
