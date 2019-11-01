@@ -6,11 +6,11 @@ export class ChatroomMember extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo
     super();
     this.memberid = memberid;
     this.wechatid = wechatid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wechatid );
+    this.wechatInfoKey = wechatid;
     this.setAttributes( ChatroomMember.attributes );
   }
   setExtraInfo( extraInfo ) {
-    this.wechatInfo.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
     this.establishSubordinate();
   }

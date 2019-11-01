@@ -12,6 +12,7 @@ export class Friend extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {
     super();
     this.friendid = friendid;
     this.wechatInfoKey = wechatid;
+    this.messageunreadcount = 0;
     this.setAttributes( Friend.attributes );
   }
   setExtraInfo( extraInfo ) {

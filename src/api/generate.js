@@ -120,6 +120,7 @@ export class Generator {
 export default class GeneratorFactory {
   static generateWechat( num ) {
     wechatLog.info( "- generateWechat: " + num );
+    GeneratorFactory.initQuantity[ 0 ] += num;
     let wechatInfos = Array.from( { length: num }, () => Generator.generateWechat() );
     wechatLog.info( wechatInfos );
     wechatInfos.forEach( item => {
@@ -130,6 +131,7 @@ export default class GeneratorFactory {
   }
   static generateFriend( num ) {
     friendLog.info( "- generateFriend: " + num );
+    GeneratorFactory.initQuantity[ 1 ] += num;
     let friends = Array.from( { length: num }, () => Generator.generateFriend() );
     friendLog.info( friends );
     friends.forEach( item => {
@@ -140,6 +142,7 @@ export default class GeneratorFactory {
   }
   static generateChatroom( num ) {
     chatroomLog.info( "- generateChatroom: " + num );
+    GeneratorFactory.initQuantity[ 2 ] += num;
     let chatrooms = Array.from( { length: num }, () => Generator.generateChatroom() );
     chatroomLog.info( chatrooms );
     chatrooms.forEach( item => {
@@ -150,6 +153,7 @@ export default class GeneratorFactory {
   }
   static generateRecent( num ) {
     recentLog.info( "- generateRecent: " + num );
+    GeneratorFactory.initQuantity[ 3 ] += num;
     let recents = new Map();
     for ( let i = 0; i < num; i++ ) {
       let recentInfo = Generator.generateRecent();
@@ -160,3 +164,5 @@ export default class GeneratorFactory {
     recentLog.info( recents );
   }
 }
+
+GeneratorFactory.initQuantity = [ 0, 0, 0, 0 ];

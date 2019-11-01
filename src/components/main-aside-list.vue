@@ -1,36 +1,58 @@
 <template>
-  <div class="main-aside-list">
-    <ul v-if="wechats && wechats.length > 0">
-      <li v-for="item in wechats" :key="item.personalid" class="personal">
-          <div class="content">
-            <span v-text="item.personalid"></span> - <span v-text="item.getNickname()"></span>
-          </div>
+  <el-container>
+    <el-header>
+      操作区
+    </el-header>
 
-          <div class="children">
-            <ul class="friend" v-if="item.getFriendList() && item.getFriendList().length > 0">
-              <li v-for="friend in item.getFriendList()">
-                <span v-text="friend.friendid"></span> - <span v-text="friend.getNickname()"></span>
-              </li>
-            </ul>
-            <ul class="friend" v-else><li>无好友</li></ul> 
+    <el-main>
+      <el-card v-for="item in wechats" :key="item.personalid" class="personal">
+        <div slot="header">
+          <span v-text="item.personalid + ' - ' + item.getNickname()"></span>
+          <el-switch
+            v-model="item.onlinestatus"
+            active-color="#13ce66" active-value="1"
+            inactive-color="#ff4949" inactive-value="0">
+          </el-switch>
+          <el-badge :value="item.unreadmsgcnt">
+            <el-button size="small">未读数</el-button>
+          </el-badge>
+          <el-badge :value="item.notthroughcount">
+            <el-button size="small">未通过好友数</el-button>
+          </el-badge>
+        </div>
 
-            <ul class="chatroom" v-if="item.getChatroomList() && item.getChatroomList().length > 0">
-              <li v-for="chatroom in item.getChatroomList()">
-                <span v-text="chatroom.clusterid"></span> - <span v-text="chatroom.getNickname()"></span>
-              </li>
-            </ul>
-            <ul class="chatroom" v-else><li>无群</li></ul>
+        <el-row :gutter="24">
+          <el-col :span="6">
+            <el-collapse v-if="item.getFriendList() && item.getFriendList().length > 0">
+              <el-collapse-item :title="friend.friendid + ' - ' + friend.getNickname()" :name="friend.friendid" v-for="friend in item.getFriendList()">
+                <pre v-html="$options.filters.syntaxHighlight(friend)"></pre>
+              </el-collapse-item>
+            </el-collapse>
+          </el-col>
 
-            <ul class="recent" v-if="item.getRecentList() && item.getRecentList().length > 0">
-              <li v-for="recent in item.getRecentList()">
-                <span v-text="recent.getUniqKey()"></span>
-              </li>
-            </ul>
-            <ul class="recent" v-else><li>无好友</li></ul>
-          </div>
-      </li>
-    </ul>
-  </div>
+          <el-col :span="8">
+            <el-collapse v-if="item.getChatroomList() && item.getChatroomList().length > 0">
+              <el-collapse-item :title="chatroom.clusterid + ' - '+ chatroom.getNickname()" :name="chatroom.clusterid" v-for="chatroom in item.getChatroomList()">
+                <pre v-html="$options.filters.syntaxHighlight(chatroom)"></pre>
+              </el-collapse-item>
+            </el-collapse>
+          </el-col>
+
+          <el-col :span="10">
+            <el-collapse v-if="item.getRecentList() && item.getRecentList().length > 0">
+              <el-collapse-item :title="recent.getUniqKey()" :name="recent.getUniqKey()" v-for="recent in item.getRecentList()">
+                <pre v-html="$options.filters.syntaxHighlight(recent)"></pre>
+              </el-collapse-item>
+            </el-collapse>
+          </el-col>
+        </el-row>
+      </el-card>
+    </el-main>
+
+    <el-footer>
+      数据统计区
+    </el-footer>
+  </el-container>
 </template>
 
 <script>
@@ -39,19 +61,32 @@
     computed: {
       wechats () {
         return WechatFlyweightFactory.getWechats();
+      },
+      friendid () {
+        let wechats = this.wechats;
+        return wechats[0].getFriendList()[0].friendid;
+      },
+      clusterid () {
+        let wechats = this.wechats;
+        return wechats[0].getChatroomList()[0].clusterid;
+      },
+      uniqKey () {
+        let wechats = this.wechats;
+        return wechats[0].getRecentList()[0].getUniqKey();
       }
     }
   }
 </script>
 
 <style>
-ul {list-style: disc;padding-left: 40px;}
-li {display: list-item; list-style: none;}
-
-li.personal {text-align: left;}
-li.personal .content { border-bottom: 1px solid gray; padding: 10px 0; margin: 2px 0;}
-
-li.personal div.children { overflow: hidden;}
-li.personal div.children ul {display: block;width: 33.33%;float: left;margin: 0;padding:0;}
-li.personal div.children ul li {padding: 8px 0;}
+  .personal {margin-bottom: 15px;}
+  .personal .el-card__header div > * {
+    margin-right: 10px;
+  }
+  pre {text-align:left;outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+  .string { color: green; }
+  .number { color: darkorange; }
+  .boolean { color: blue; }
+  .null { color: magenta; }
+  .key { color: red; }
 </style>
