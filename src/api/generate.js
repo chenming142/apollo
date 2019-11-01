@@ -34,8 +34,8 @@ export class Generator {
     } );
   }
 
-  static generateFriend() {
-    let personalid = WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
+  static generateFriend( personalid ) {
+    personalid = personalid ? personalid : WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
     let nickname = rd.cname();
 
     return Mock.mock( {
@@ -60,8 +60,8 @@ export class Generator {
     } );
   }
 
-  static generateChatroom() {
-    let personalid = WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
+  static generateChatroom( personalid ) {
+    personalid = personalid ? personalid : WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
     let clustername = rd.cword( 3, 10 );
 
     return Mock.mock( {
@@ -82,22 +82,28 @@ export class Generator {
     } );
   }
 
-  static generateRecent() {
-    let chattargettype = generateRdNum( 1, 2 );
+  static generateRecent( personalid, chattargettype ) {
+    chattargettype = chattargettype ? chattargettype : generateRdNum( 1, 2 );
 
-    let chattargets = chattargettype == __chattargettype__.friend ?
-      FriendFlyweightFatory.getFriends() :
-      ChatroomFlyweightFactory.getChatrooms();
-    let chattargetids = [ ...chattargets ].map( item => item[ 0 ] );
+    let chattargets, chattargetids, chattargetid, chattarget;
+    if ( !personalid ) {
+      chattargets = chattargettype == __chattargettype__.friend ?
+        FriendFlyweightFatory.getFriends() :
+        ChatroomFlyweightFactory.getChatrooms();
+    } else {
+      let wechat = WechatFlyweightFactory.getWechat( personalid );
+      chattargets = chattargettype == __chattargettype__.friend ?
+        wechat.getFriendList() :
+        wechat.getChatroomList();
+    }
+    chattargetids = [ ...chattargets ].map( item => item[ 0 ] );
 
-    let chattargetid = chattargetids.getRdItem();
-    let chattarget = chattargets.get( chattargetid );
-    //recentLog.info( '- 1.generateRecent.chattarget:{chattargettype: ' + chattargettype + ', chattargetid: ' + chattargetid + '} ' );
+    chattargetid = chattargetids.getRdItem();
+    chattarget = chattargets.get( chattargetid );
 
     let nickname = chattarget.getNickname(),
       wechatid = chattarget.getWechatid(),
       headimgurl = chattarget.getHeadimgurl();
-    //recentLog.info( '- 2.generateRecent.chattarget:{nickname: ' + nickname + ', wechatid: ' + wechatid + ', headimgurl:' + headimgurl + '}' );
 
     return Mock.mock( {
       personalid: chattarget[ 'personalid' ],
@@ -129,10 +135,10 @@ export default class GeneratorFactory {
       wechat.setExtraInfo( item );
     } );
   }
-  static generateFriend( num ) {
+  static generateFriend( num, personalid ) {
     friendLog.info( "- generateFriend: " + num );
     GeneratorFactory.initQuantity[ 1 ] += num;
-    let friends = Array.from( { length: num }, () => Generator.generateFriend() );
+    let friends = Array.from( { length: num }, () => Generator.generateFriend( personalid ) );
     friendLog.info( friends );
     friends.forEach( item => {
       let { friendsid, wechatid } = item;
@@ -140,10 +146,10 @@ export default class GeneratorFactory {
       friend.setExtraInfo( item );
     } );
   }
-  static generateChatroom( num ) {
+  static generateChatroom( num, personalid ) {
     chatroomLog.info( "- generateChatroom: " + num );
     GeneratorFactory.initQuantity[ 2 ] += num;
-    let chatrooms = Array.from( { length: num }, () => Generator.generateChatroom() );
+    let chatrooms = Array.from( { length: num }, () => Generator.generateChatroom( personalid ) );
     chatroomLog.info( chatrooms );
     chatrooms.forEach( item => {
       let { clusterid, wechatid } = item;
@@ -151,12 +157,12 @@ export default class GeneratorFactory {
       chatroom.setExtraInfo( item );
     } );
   }
-  static generateRecent( num ) {
+  static generateRecent( num, personalid ) {
     recentLog.info( "- generateRecent: " + num );
     GeneratorFactory.initQuantity[ 3 ] += num;
     let recents = new Map();
     for ( let i = 0; i < num; i++ ) {
-      let recentInfo = Generator.generateRecent();
+      let recentInfo = Generator.generateRecent( personalid );
       let recent = RecentFactory.getRecentInstance( recentInfo );
       recent.setExtraInfo( recentInfo );
       recents.set( recent.getUniqKey(), recent );

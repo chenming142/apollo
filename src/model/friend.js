@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin from "./subordinate";
 
@@ -205,6 +206,7 @@ export class FriendFlyweightFatory {
       return friends.get( friendid );
     } else {
       let friend = new Friend( friendid, wechatid );
+      Vue.set( friends, friendid, friend );
       friends.set( friendid, friend );
       return friend;
     }

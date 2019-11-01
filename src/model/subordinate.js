@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import WechatFactory, { WechatFlyweightFactory } from "./wechat";
 import { Friend } from './friend';
 import ChatroomFactory, { Chatroom, ChatroomFlyweightFactory } from './chatroom';

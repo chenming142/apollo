@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import { SubordinateBehaviorMixin } from './subordinate';
 
@@ -160,6 +161,7 @@ export class WechatFlyweightFactory {
       return wechats[ index ];
     } else {
       let wechat = new Wechat( personalid, wechatid );
+      //Vue.set( wechats, wechats.length, wechat );
       wechats.push( wechat );
       return wechat;
     }

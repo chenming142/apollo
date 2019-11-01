@@ -1,6 +1,6 @@
 import Logging from './api/logging';
 
-import "./test/test4msg";
+//import "./test/test4msg";
 
 import "./test/testgenerate";
 
