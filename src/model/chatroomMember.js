@@ -1,5 +1,4 @@
-import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
-import WechatInfoFlyweightFactory from "./wechatInfo";
+import { ExtraInfo, ExtraInfoMixin, WechatInfoFlyweightFactory } from "./wechatInfo";
 import SubordinatorMixin from "./subordinate";
 
 export class ChatroomMember extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {

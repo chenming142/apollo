@@ -1,9 +1,10 @@
-import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
-import WechatInfoFlyweightFactory from "./wechatInfo";
+import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin, { SubordinateBehaviorMixin } from "./subordinate";
-import { ChatroomMember } from './chatroomMember';
-import constants from "../utils/constants";
 
+import { ChatroomMember } from './chatroomMember';
+import { WechatInfoFlyweightFactory } from './wechatInfo';
+
+import constants from "../utils/constants";
 import Logging from '../api/logging';
 
 const chatroomLog = Logging.getLogger( 'chatroom' );
@@ -14,20 +15,22 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     super();
     this.clusterid = clusterid;
     this.wxchatroomid = wxchatroomid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wxchatroomid );
+    this.wechatInfoKey = wxchatroomid;
     this.memberIds = new Set();
     this.setAttributes( Chatroom.attributes );
+
+    //TODO: 动态重载方法
+    this.getNickname = function () { return this.getExtraInfoByKey( 'clustername' ); }
+    this.getWechatid = function () { return this.getExtraInfoByKey( 'wxchatroomid' ); }
   }
   setExtraInfo( extraInfo ) {
-    this.wechatInfo.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
     this.checkSubordinatorNew();
     this.establishSubordinate();
     this.generateMembers();
     this.calcMessageunreadcount();
   }
-  getNickname() { return this.getExtraInfoByKey( 'clustername' ); }
-  getWechatid() { return this.getExtraInfoByKey( 'wxchatroomid' ); }
 
   calcMessageunreadcount() {
     const self = this;
@@ -113,45 +116,23 @@ Chatroom.attributes = [
 ];
 
 export default class ChatroomFactory {
-  static getChatroom( clusterid, wxchatroomid ) {
-    const self = this;
-    let chatrooms = self.getChatrooms();
-    if ( chatrooms.has( clusterid ) ) {
-      return chatrooms.get( clusterid );
-    } else {
-      let chatroom = new Chatroom( clusterid, wxchatroomid );
-      chatrooms.set( clusterid, chatroom );
-      return chatroom;
-    }
-  }
   static checkChatroomNew( clusterid ) {
     const self = this;
-    if ( !self.getChatrooms().has( clusterid ) ) {
+    if ( !ChatroomFlyweightFactory.getChatrooms().has( clusterid ) ) {
       self.getChatroomByApi( clusterid );
     }
   }
   static getChatroomsByClusterIds( clusterIds = [] ) {
     const self = this;
-    let chatrooms = self.getChatrooms();
+    let chatrooms = ChatroomFlyweightFactory.getChatrooms();
     return clusterIds.reduce( ( ret, clusterId ) => ret.concat( [ chatrooms.get( clusterId ) ] ), [] );
   }
   static delete( clusterId ) {
     const self = this;
-    let chatrooms = self.getChatrooms();
+    let chatrooms = ChatroomFlyweightFactory.getChatrooms();
     if ( chatrooms.has( clusterId ) ) {
       chatrooms.delete( clusterId );
     }
-  }
-  static getChatrooms() { return this.getInstance().chatrooms; }
-  static getInstance() {
-    const ctor = this;
-    return ( function () {
-      if ( !ctor.instance ) {
-        ctor.instance = new ctor();
-        ctor.instance.chatrooms = new Map();
-      }
-      return ctor.instance;
-    } )();
   }
   static getChatroomByApi( clusterid ) {
     chatroomLog.info( "- 调用Api接口，获取好友：" + clusterid );
@@ -193,5 +174,30 @@ export default class ChatroomFactory {
     let { wxchatroomid } = chatroomInfo;
     let chatroom = this.getChatroom( clusterid, wxchatroomid );
     chatroom.setExtraInfo( chatroomInfo );
+  }
+}
+
+export class ChatroomFlyweightFactory {
+  static getChatroom( clusterid, wxchatroomid ) {
+    const self = this;
+    let chatrooms = self.getChatrooms();
+    if ( chatrooms.has( clusterid ) ) {
+      return chatrooms.get( clusterid );
+    } else {
+      let chatroom = new Chatroom( clusterid, wxchatroomid );
+      chatrooms.set( clusterid, chatroom );
+      return chatroom;
+    }
+  }
+  static getChatrooms() { return this.getInstance().chatrooms; }
+  static getInstance() {
+    const ctor = this;
+    return ( function () {
+      if ( !ctor.instance ) {
+        ctor.instance = new ctor();
+        ctor.instance.chatrooms = new Map();
+      }
+      return ctor.instance;
+    } )();
   }
 }

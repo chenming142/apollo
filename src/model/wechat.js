@@ -1,9 +1,10 @@
-import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
-import WechatInfoFlyweightFactory from "./wechatInfo";
-import FriendFatory, { Friend } from "./friend";
-import ChatroomFactory, { Chatroom } from "./chatroom";
-import { RecentFlyweightFactory, Recent } from "./recent";
+import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import { SubordinateBehaviorMixin } from './subordinate';
+
+import FriendFatory from "./friend";
+import ChatroomFactory from "./chatroom";
+import { RecentFlyweightFactory } from "./recent";
+
 import Logging from '../api/logging';
 
 const wechatLog = Logging.getLogger( 'wechat' );
@@ -12,10 +13,10 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
   constructor( personalid, wechatid ) {
     super();
     this.personalid = personalid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wechatid );
+    this.wechatInfoKey = wechatid;
 
     this.friendIds = new Set();
-    this.chatroomIds = new Set();
+    this.clusterIds = new Set();
     this.uniqKeys = new Set();
 
     this.unreadmsgcnt = 0;
@@ -25,7 +26,7 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
   }
   setExtraInfo( extraInfo ) {
     wechatLog.info( '- setExtraInfo', extraInfo );
-    this.wechatInfo.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
   }
 
@@ -48,7 +49,7 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
   }
 
   checkAvaliable() {
-    let friendAndChatroom = Array.from( this.friendIds ).concat( [ ...this.chatroomIds ] );
+    let friendAndChatroom = Array.from( this.friendIds ).concat( [ ...this.clusterIds ] );
     wechatLog.info( "- 检测个人号是否有效（存在好友或群）: " + this.personalid, '好友或群数量：' + friendAndChatroom.length );
     if ( friendAndChatroom.length > 0 ) {
       return true;
@@ -63,8 +64,9 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
     return FriendFatory.getFriendsByFriendIds( friendIds );
   }
   getChatroomList() {
-    let chatroomIds = [ ...this.chatroomIds ];
-    return ChatroomFactory.getChatroomsByClusterIds( chatroomIds );
+    let clusterIds = [ ...this.clusterIds ];
+    // wechatLog.info( '- 获取归属的群列表', clusterIds );
+    return ChatroomFactory.getChatroomsByClusterIds( clusterIds );
   }
   getRecentList() {
     let uniqKeys = [ ...this.uniqKeys ];
@@ -83,60 +85,28 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
 Wechat.attributes = [ "personalid", "unreadmsgcnt", "onlinestatus", "notthroughcount" ];
 
 export default class WechatFactory {
-  static getWechat( personalid, wechatid ) {
-    const self = this;
-    let wechats = self.getWechats(),
-      index = self.getWechatIndex( personalid );
-    if ( index > -1 ) {
-      return wechats[ index ];
-    } else {
-      let wechat = new Wechat( personalid, wechatid );
-      wechats.push( wechat );
-      return wechat;
-    }
-  }
   static checkWechatNew( personalid ) {
     const self = this;
-    let index = self.getWechatIndex( personalid );
+    let index = WechatFlyweightFactory.getWechatIndex( personalid );
     if ( index <= -1 ) {
       self.getWechatByApi( personalid );
     }
   }
   static getFristWechat() {
     const self = this;
-    let wechats = self.getWechats();
+    let wechats = WechatFlyweightFactory.getWechats();
     return wechats && wechats.length > 0 ? wechats[ 0 ] : null;
   }
   static delete( personalid ) {
     const self = this;
-    let index = self.getWechatIndex( personalid );
+    let index = WechatFlyweightFactory.getWechatIndex( personalid );
     wechatLog.info( "- 删除个人号:" + personalid, '序号： ' + index );
     if ( index > -1 ) {
-      let wechats = self.getWechats();
+      let wechats = WechatFlyweightFactory.getWechats();
       wechats.splice( index, 1 );
     } else {
       throw Error( "删除个人号不存在：" + personalid, index );
     }
-  }
-  static getWechatIndex( personalid ) {
-    const self = this;
-    let wechats = self.getWechats();
-    if ( !wechats || wechats.length <= 0 ) return -1;
-    if ( wechats && wechats.length > 0 ) {
-      return wechats.findIndex( item => item.personalid === personalid );
-    }
-    return -1;
-  }
-  static getWechats() { return this.getInstance().wechats; }
-  static getInstance() {
-    const ctor = this;
-    return ( function () {
-      if ( !ctor.instance ) {
-        ctor.instance = new ctor();
-        ctor.instance.wechats = [];
-      }
-      return ctor.instance;
-    } )();
   }
   static getWechatByApi( personalid ) {
     wechatLog.info( "- 调用Api接口，获取个人号：" + personalid );
@@ -176,7 +146,42 @@ export default class WechatFactory {
       throw Error( "- 调用Api接口，获取个人号：" + personalid + ",失败~" );
     }
     let { wechatid } = wechatInfo;
-    let wechat = this.getWechat( personalid, wechatid );
+    let wechat = WechatFlyweightFactory.getWechat( personalid, wechatid );
     wechat.setExtraInfo( wechatInfo );
   }
 }
+
+export class WechatFlyweightFactory {
+  static getWechat( personalid, wechatid ) {
+    const self = this;
+    let wechats = self.getWechats(),
+      index = self.getWechatIndex( personalid );
+    if ( index > -1 ) {
+      return wechats[ index ];
+    } else {
+      let wechat = new Wechat( personalid, wechatid );
+      wechats.push( wechat );
+      return wechat;
+    }
+  }
+  static getWechatIndex( personalid ) {
+    const self = this;
+    let wechats = self.getWechats();
+    if ( !wechats || wechats.length <= 0 ) return -1;
+    if ( wechats && wechats.length > 0 ) {
+      return wechats.findIndex( item => item.personalid === personalid );
+    }
+    return -1;
+  }
+  static getWechats() { return this.getInstance().wechats; }
+  static getInstance() {
+    const ctor = this;
+    return ( function () {
+      if ( !ctor.instance ) {
+        ctor.instance = new ctor();
+        ctor.instance.wechats = [];
+      }
+      return ctor.instance;
+    } )();
+  }
+};

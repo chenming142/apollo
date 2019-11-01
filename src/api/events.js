@@ -1,10 +1,11 @@
 import Vue from "vue";
 import constants from "../utils/constants";
+
 import MessageFactory from "../model/message";
-import FriendFatory from "../model/friend";
-import WechatFactory from "../model/wechat";
-import WechatInfoFlyweightFactory from "../model/wechatInfo";
-import ChatroomFactory from '../model/chatroom';
+import FriendFatory, { FriendFlyweightFatory } from "../model/friend";
+import { WechatFlyweightFactory } from "../model/wechat";
+import { Chatroom, ChatroomFlyweightFactory } from '../model/chatroom';
+import { WechatInfoFlyweightFactory } from '../model/wechatInfo';
 
 import Logging from '../api/logging';
 
@@ -531,7 +532,7 @@ instance.$on( __events__.ON_MESSAGES, function onMessages( messageInfos ) {
 instance.$on( __events__.FRIEND_INFO_CHANGED, function onFriendInfoChanged( friendInfo ) {
   messageLog.info( "--- process[" + __events__.FRIEND_INFO_CHANGED + "]" );
   let { friendsid, wechatid } = friendInfo;
-  let friend = FriendFatory.getFriend( friendsid, wechatid );
+  let friend = FriendFlyweightFatory.getFriend( friendsid, wechatid );
 
   //TODO: friend 可能存在，也可能是New
   //更新需要特殊处理么？
@@ -545,7 +546,7 @@ instance.$on( __events__.FRIEND_INFO_CHANGED, function onFriendInfoChanged( frie
   friend.onFriendInfoChangedHandle( changetype );
 
   console.log( '\n--- result.' + __events__.FRIEND_INFO_CHANGED + ' ---------------' );
-  let wechats = WechatFactory.getWechats();
+  let wechats = WechatFlyweightFactory.getWechats();
   wechats.forEach( item => item.toString() );
   messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos() );
 } );
@@ -553,7 +554,7 @@ instance.$on( __events__.FRIEND_INFO_CHANGED, function onFriendInfoChanged( frie
 instance.$on( __events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged( chatroomInfo ) {
   messageLog.info( "--- process[" + __events__.CHATROOM_INFO_CHANGED + "]" );
   let { clusterid, wxchatroomid } = chatroomInfo;
-  let chatroom = ChatroomFactory.getChatroom( clusterid, wxchatroomid );
+  let chatroom = ChatroomFlyweightFactory.getChatroom( clusterid, wxchatroomid );
   //TODO: chatroom 可能存在，也可能是New
   //更新需要特殊处理么？
   chatroom.setExtraInfo( chatroomInfo );
@@ -562,7 +563,7 @@ instance.$on( __events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged( 
   chatroom.onChatroomInfoChangeHandle( changetype );
 
   console.log( '\n--- result.' + __events__.CHATROOM_INFO_CHANGED + ' ---------------' );
-  let wechats = WechatFactory.getWechats();
+  let wechats = WechatFlyweightFactory.getWechats();
   wechats.forEach( item => item.toString() );
   messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos() );
 } );

@@ -1,9 +1,9 @@
 import Mock from "mockjs";
 import Logging from './logging';
 
-import WechatFactory from '../model/wechat';
-import FriendFatory from '../model/friend';
-import ChatroomFactory from '../model/chatroom';
+import { WechatFlyweightFactory } from '../model/wechat';
+import { FriendFlyweightFatory } from '../model/friend';
+import { ChatroomFlyweightFactory } from '../model/chatroom';
 import RecentFactory from '../model/recent';
 
 const wechatLog = Logging.getLogger( 'wechat' );
@@ -35,7 +35,7 @@ export class Generator {
   }
 
   static generateFriend() {
-    let personalid = WechatFactory.getWechats().map( item => item.personalid ).getRdItem();
+    let personalid = WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
     let nickname = rd.cname();
 
     return Mock.mock( {
@@ -61,7 +61,7 @@ export class Generator {
   }
 
   static generateChatroom() {
-    let personalid = WechatFactory.getWechats().map( item => item.personalid ).getRdItem();
+    let personalid = WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
     let clustername = rd.cword( 3, 10 );
 
     return Mock.mock( {
@@ -86,19 +86,18 @@ export class Generator {
     let chattargettype = generateRdNum( 1, 2 );
 
     let chattargets = chattargettype == __chattargettype__.friend ?
-      FriendFatory.getFriends() :
-      ChatroomFactory.getChatrooms();
+      FriendFlyweightFatory.getFriends() :
+      ChatroomFlyweightFactory.getChatrooms();
     let chattargetids = [ ...chattargets ].map( item => item[ 0 ] );
 
     let chattargetid = chattargetids.getRdItem();
     let chattarget = chattargets.get( chattargetid );
-    recentLog.info( '- 1.generateRecent.chattarget:{chattargettype: ' + chattargettype + ', chattargetid: ' + chattargetid + '} ' );
+    //recentLog.info( '- 1.generateRecent.chattarget:{chattargettype: ' + chattargettype + ', chattargetid: ' + chattargetid + '} ' );
 
     let nickname = chattarget.getNickname(),
       wechatid = chattarget.getWechatid(),
       headimgurl = chattarget.getHeadimgurl();
-    recentLog.info( '- 2.generateRecent.chattarget:{nickname: ' + nickname + ', wechatid: ' + wechatid + ', headimgurl:' + headimgurl + '}' );
-    console.log( '' );
+    //recentLog.info( '- 2.generateRecent.chattarget:{nickname: ' + nickname + ', wechatid: ' + wechatid + ', headimgurl:' + headimgurl + '}' );
 
     return Mock.mock( {
       personalid: chattarget[ 'personalid' ],
@@ -125,7 +124,7 @@ export default class GeneratorFactory {
     wechatLog.info( wechatInfos );
     wechatInfos.forEach( item => {
       let { personalid, wechatid } = item;
-      let wechat = WechatFactory.getWechat( personalid, wechatid );
+      let wechat = WechatFlyweightFactory.getWechat( personalid, wechatid );
       wechat.setExtraInfo( item );
     } );
   }
@@ -135,7 +134,7 @@ export default class GeneratorFactory {
     friendLog.info( friends );
     friends.forEach( item => {
       let { friendsid, wechatid } = item;
-      let friend = FriendFatory.getFriend( friendsid, wechatid );
+      let friend = FriendFlyweightFatory.getFriend( friendsid, wechatid );
       friend.setExtraInfo( item );
     } );
   }
@@ -145,7 +144,7 @@ export default class GeneratorFactory {
     chatroomLog.info( chatrooms );
     chatrooms.forEach( item => {
       let { clusterid, wechatid } = item;
-      let chatroom = ChatroomFactory.getChatroom( clusterid, wechatid );
+      let chatroom = ChatroomFlyweightFactory.getChatroom( clusterid, wechatid );
       chatroom.setExtraInfo( item );
     } );
   }

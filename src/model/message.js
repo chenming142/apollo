@@ -1,5 +1,4 @@
-import ExtraInfo from "./extraInfo";
-import WechatInfoFlyweightFactory, { WechatInfoFactory } from "./wechatInfo";
+import WechatInfoFactory, { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 
 import constants from "../utils/constants";
 import Logging from '../api/logging';
@@ -527,6 +526,7 @@ export default class MessageFactory {
     return MessageFlyweightFactory.buildMessageInstance( messageInfo );
   }
 }
+
 
 export class MessageFlyweightFactory {
   static buildMessageInstance( messageInfo ) {

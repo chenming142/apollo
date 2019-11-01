@@ -1,6 +1,6 @@
-import WechatFactory from "./wechat";
+import WechatFactory, { WechatFlyweightFactory } from "./wechat";
 import { Friend } from './friend';
-import ChatroomFactory, { Chatroom } from './chatroom';
+import ChatroomFactory, { Chatroom, ChatroomFlyweightFactory } from './chatroom';
 import { ChatroomMember } from './chatroomMember';
 import { Recent } from './recent';
 
@@ -17,12 +17,6 @@ export default function SubordinatorMixin( Base ) {
     }
     checkSubordinatorNew() {
       let { personalid } = this;
-      if ( this instanceof Friend ) {
-        friendLog.info( "- checkSubordinateWechatNew: " + personalid );
-      }
-      if ( this instanceof Chatroom ) {
-        chatroomLog.info( "- checkSubordinateWechatNew: " + personalid );
-      }
       WechatFactory.checkWechatNew( personalid );
     }
     checkSubordinatorAvaliable() {
@@ -35,11 +29,11 @@ export default function SubordinatorMixin( Base ) {
       if ( this instanceof ChatroomMember ) {
         let { clusterid } = this;
         subordinateKey = clusterid;
-        subordinator = ChatroomFactory.getChatroom( subordinateKey );
+        subordinator = ChatroomFlyweightFactory.getChatroom( subordinateKey );
       } else {
         let { personalid } = this;
         subordinateKey = personalid;
-        subordinator = WechatFactory.getWechat( subordinateKey );
+        subordinator = WechatFlyweightFactory.getWechat( subordinateKey );
       }
 
       if ( subordinator ) {
@@ -72,7 +66,7 @@ export function SubordinateBehaviorMixin( Base ) {
       if ( clazz instanceof Friend ) {
         return this.friendIds;
       } else if ( clazz instanceof Chatroom ) {
-        return this.chatroomIds;
+        return this.clusterIds;
       } else if ( clazz instanceof Recent ) {
         return this.uniqKeys;
       } else if ( clazz instanceof ChatroomMember ) {

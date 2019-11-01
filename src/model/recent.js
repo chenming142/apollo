@@ -1,11 +1,12 @@
-import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
-import WechatInfoFlyweightFactory from "./wechatInfo";
-import constants from "../utils/constants";
-import MessageFactory, { Message, MessageFlyweightFactory } from "./message";
-import { Friend } from "./friend";
-import { Chatroom } from "./chatroom";
+import { ExtraInfo, ExtraInfoMixin, WechatInfoFlyweightFactory } from "./wechatInfo";
 import SubordinatorMixin from "./subordinate";
 import AssociateMixin from "./associate";
+
+import MessageFactory, { Message } from "./message";
+import { Friend } from "./friend";
+import { Chatroom } from "./chatroom";
+
+import constants from "../utils/constants";
 
 const __chattargettype__ = constants.CHAT_TARGET_TYPE;
 const __disturb__ = constants.DISTURB;
@@ -16,7 +17,7 @@ export class Recent extends AssociateMixin( SubordinatorMixin( ExtraInfoMixin( E
     this.personalid = personalid;
     this.chattargetid = chattargetid;
     this.chattargettype = chattargettype;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wechatid );
+    this.wechatInfoKey = wechatid;
     this.setAttributes( Recent.attributes );
   }
   getUniqKey() {
@@ -25,7 +26,7 @@ export class Recent extends AssociateMixin( SubordinatorMixin( ExtraInfoMixin( E
     return personalid + "-" + chattargettype + "-" + wechatid;
   }
   setExtraInfo( extraInfo ) {
-    this.wechatInfo.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
     this.checkSubordinatorNew();
     this.establishSubordinate();

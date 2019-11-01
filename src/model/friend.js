@@ -1,5 +1,4 @@
-import ExtraInfo, { ExtraInfoMixin } from "./extraInfo";
-import WechatInfoFlyweightFactory from "./wechatInfo";
+import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin from "./subordinate";
 
 import constants from "../utils/constants";
@@ -12,11 +11,11 @@ export class Friend extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {
   constructor( friendid, wechatid ) {
     super();
     this.friendid = friendid;
-    this.wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wechatid );
+    this.wechatInfoKey = wechatid;
     this.setAttributes( Friend.attributes );
   }
   setExtraInfo( extraInfo ) {
-    this.wechatInfo.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
     this.checkSubordinatorNew();
     this.establishSubordinate();
@@ -46,45 +45,23 @@ export class Friend extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {
 Friend.attributes = [ "personalid", "friendsid", "groupid", "sex", "mobile", "country", "provice", "city", "taglist", "datastatus", "attributioncustomer", "prevattribution", "prevcustomer", "messageunreadcount" ];
 
 export default class FriendFatory {
-  static getFriend( friendid, wechatid ) {
-    const self = this;
-    let friends = self.getFriends();
-    if ( friends.has( friendid ) ) {
-      return friends.get( friendid );
-    } else {
-      let friend = new Friend( friendid, wechatid );
-      friends.set( friendid, friend );
-      return friend;
-    }
-  }
   static checkFriendNew( friendid ) {
     const self = this;
-    if ( !self.getFriends().has( friendid ) ) {
+    if ( !FriendFlyweightFatory.getFriends().has( friendid ) ) {
       self.getFriendByApi( friendid );
     }
   }
   static getFriendsByFriendIds( friendids = [] ) {
     const self = this;
-    let friends = self.getFriends();
+    let friends = FriendFlyweightFatory.getFriends();
     return friendids.reduce( ( ret, friendid ) => ret.concat( [ friends.get( friendid ) ] ), [] );
   }
   static delete( friendid ) {
     const self = this;
-    let friends = self.getFriends();
+    let friends = FriendFlyweightFatory.getFriends();
     if ( friends.has( friendid ) ) {
       friends.delete( friendid );
     }
-  }
-  static getFriends() { return this.getInstance().friends; }
-  static getInstance() {
-    const ctor = this;
-    return ( function () {
-      if ( !ctor.instance ) {
-        ctor.instance = new ctor();
-        ctor.instance.friends = new Map();
-      }
-      return ctor.instance;
-    } )();
   }
   static getFriendByApi( friendid ) {
     friendLog.info( "- 调用Api接口，获取好友：" + friendid );
@@ -214,7 +191,32 @@ export default class FriendFatory {
       friendLog.error( "- 调用Api接口，获取好友：" + friendid + ",失败~" );
     }
     let { wechatid } = friendInfo;
-    let friend = this.getFriend( friendid, wechatid );
+    let friend = FriendFlyweightFatory.getFriend( friendid, wechatid );
     friend.setExtraInfo( friendInfo );
+  }
+}
+
+export class FriendFlyweightFatory {
+  static getFriend( friendid, wechatid ) {
+    const self = this;
+    let friends = self.getFriends();
+    if ( friends.has( friendid ) ) {
+      return friends.get( friendid );
+    } else {
+      let friend = new Friend( friendid, wechatid );
+      friends.set( friendid, friend );
+      return friend;
+    }
+  }
+  static getFriends() { return this.getInstance().friends; }
+  static getInstance() {
+    const ctor = this;
+    return ( function () {
+      if ( !ctor.instance ) {
+        ctor.instance = new ctor();
+        ctor.instance.friends = new Map();
+      }
+      return ctor.instance;
+    } )();
   }
 }

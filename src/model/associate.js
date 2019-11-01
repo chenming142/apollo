@@ -15,11 +15,11 @@ const AssociateMixin = Base =>
       let { chattargetid, chattargettype } = this;
       switch ( chattargettype ) {
         case __chattargettype__.friend:
-          associateLog.info( "- friend.checkAssociateRefNew", chattargetid );
+          //associateLog.info( "- friend.checkAssociateRefNew", chattargetid );
           FriendFatory.checkFriendNew( chattargetid );
           break;
         case __chattargettype__.chatroom:
-          associateLog.info( "- chatroom.checkAssociateRefNew", chattargetid );
+          //associateLog.info( "- chatroom.checkAssociateRefNew", chattargetid );
           ChatroomFatory.checkChatroomNew( chattargetid );
           break;
         default:
