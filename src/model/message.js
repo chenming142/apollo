@@ -538,10 +538,8 @@ export class MessageFlyweightFactory {
     } else {
       let { msgtype } = messageInfo;
       let ctor = MessageFactory.getMessageCtor( msgtype );
-      // console.log("messsage.constructor: msgtype=" + msgtype, ctor);
       if ( ctor ) {
         let message = new ctor( messageInfo );
-        // message.setExtraInfo(messageInfo);
         return self.getMessage( message );
       }
     }
@@ -550,12 +548,17 @@ export class MessageFlyweightFactory {
     const self = this;
     let messages = self.getMessages();
     let { locmsgid } = message;
-    if ( messages.has( message && locmsgid ) ) {
-      message = messages.get( locmsgid );
+    if ( self.hasMessage( message && locmsgid ) ) {
+      message = messages[ locmsgid ];
     } else {
-      messages.set( locmsgid, message );
+      messages[ locmsgid ] = message;
     }
     return message;
+  }
+  static hasMessage( locmsgid ) {
+    const self = this;
+    let messages = self.getMessages();
+    return Object.keys( messages ).indexOf( locmsgid ) > -1;
   }
   static getMessages() { return this.getInstance().messages; }
   static getInstance() {
@@ -563,7 +566,7 @@ export class MessageFlyweightFactory {
     return ( function () {
       if ( !ctor.instance ) {
         ctor.instance = new ctor();
-        ctor.instance.messages = new Map();
+        ctor.instance.messages = {};
       }
       return ctor.instance;
     } )();

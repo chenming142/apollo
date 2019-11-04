@@ -16,9 +16,9 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
     this.personalid = personalid;
     this.wechatInfoKey = wechatid;
 
-    this.friendIds = new Set();
-    this.clusterIds = new Set();
-    this.uniqKeys = new Set();
+    this.friendIds = [];
+    this.clusterIds = [];
+    this.uniqKeys = [];
 
     this.unreadmsgcnt = 0;
     this.notthroughcount = 0;
@@ -88,6 +88,7 @@ Wechat.attributes = [ "personalid", "unreadmsgcnt", "onlinestatus", "notthroughc
 export default class WechatFactory {
   static checkWechatNew( personalid ) {
     const self = this;
+    // wechatLog.info( ' - WechatFactory.checkWechatNew 检测个人号是否存在: ' + personalid );
     let index = WechatFlyweightFactory.getWechatIndex( personalid );
     if ( index <= -1 ) {
       self.getWechatByApi( personalid );

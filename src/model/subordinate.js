@@ -77,15 +77,16 @@ export function SubordinateBehaviorMixin( Base ) {
     establish( identity, clazz ) {
       const self = this;
       let subordinator = self.getSubordinator( clazz );
-      if ( !subordinator.has( identity ) ) {
-        subordinator.add( identity );
+      if ( subordinator.indexOf( identity ) <= -1 ) {
+        subordinator.push( identity );
       }
     }
     relieve( identity, clazz ) {
       const self = this;
       let subordinator = self.getSubordinator( clazz );
-      if ( subordinator.has( identity ) ) {
-        subordinator.delete( identity );
+      let index = subordinator.indexOf( identity );
+      if ( index > -1 ) {
+        subordinator.splice( index, 1 );
       }
     }
     clear( clazz ) {

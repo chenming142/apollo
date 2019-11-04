@@ -16,7 +16,7 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     this.clusterid = clusterid;
     this.wxchatroomid = wxchatroomid;
     this.wechatInfoKey = wxchatroomid;
-    this.memberIds = new Set();
+    this.memberIds = [];
     this.setAttributes( Chatroom.attributes );
 
     //TODO: 动态重载方法
@@ -118,56 +118,26 @@ Chatroom.attributes = [
 export default class ChatroomFactory {
   static checkChatroomNew( clusterid ) {
     const self = this;
-    if ( !ChatroomFlyweightFactory.getChatrooms().has( clusterid ) ) {
+    if ( !ChatroomFlyweightFactory.hasChatroom( clusterid ) ) {
       self.getChatroomByApi( clusterid );
     }
   }
   static getChatroomsByClusterIds( clusterIds = [] ) {
     const self = this;
     let chatrooms = ChatroomFlyweightFactory.getChatrooms();
-    return clusterIds.reduce( ( ret, clusterId ) => ret.concat( [ chatrooms.get( clusterId ) ] ), [] );
+    return clusterIds.reduce( ( ret, clusterId ) => ret.concat( [ chatrooms[ clusterId ] ] ), [] );
   }
   static delete( clusterId ) {
     const self = this;
     let chatrooms = ChatroomFlyweightFactory.getChatrooms();
-    if ( chatrooms.has( clusterId ) ) {
-      chatrooms.delete( clusterId );
+    if ( chatrooms.hasChatroom( clusterId ) ) {
+      //TODO: Vue.delete() ?
+      delete chatrooms[ clusterId ];
     }
   }
   static getChatroomByApi( clusterid ) {
     chatroomLog.info( "- 调用Api接口，获取好友：" + clusterid );
-    let chatroomList = [ {
-      personalid: 9661,
-      clusterid: 38891,
-      groupid: 0,
-      wxchatroomid: "22615851297@chatroom",
-      clustername: "016",
-      headimgurl: "http://wx.qlogo.cn/mmcrhead/6OXnmZ7zcgfnxeeiaGuiaJC93XfARZ7FaZTRLoywTqrTxpmAux6xTFEicv4unkcrhVnCjPzl1F2YGJ6AFDFEAs2wiboL5hZulIR8/0",
-      remark: "",
-      isowner: 1,
-      ownerwechatid: "wxid_2tvf9y1ndag622",
-      isreturnname: 0,
-      returnname: "",
-      membercount: 4,
-      datastatus: 2,
-      ownerallowflag: 0
-    }, {
-      personalid: 9661,
-      clusterid: 38976,
-      groupid: 0,
-      wxchatroomid: "22431750377@chatroom",
-      clustername: "555555555",
-      headimgurl: "http://wx.qlogo.cn/mmcrhead/oyG9nzLg9aKj5WxDZTeqktjq3l82kw1B3rDp9ny8HHH9ic5eEzAicUmP1YdzY7jH8lVorRlGeibfHrrmFW17A9PmKbgpCS7wBt2/0",
-      remark: "",
-      isowner: 1,
-      ownerwechatid: "wxid_2tvf9y1ndag622",
-      isreturnname: 0,
-      returnname: "",
-      membercount: 6,
-      datastatus: 2,
-      ownerallowflag: 0
-    } ];
-    let chatroomInfo = chatroomList.find( item => item.clusterid === clusterid );
+    let chatroomInfo = ChatroomFlyweightFactory.getChatroom( clusterid );
     if ( !chatroomInfo ) {
       chatroomLog.error( "- 调用Api接口，获取群：" + clusterid + ",失败~" );
     }
@@ -181,13 +151,19 @@ export class ChatroomFlyweightFactory {
   static getChatroom( clusterid, wxchatroomid ) {
     const self = this;
     let chatrooms = self.getChatrooms();
-    if ( chatrooms.has( clusterid ) ) {
-      return chatrooms.get( clusterid );
+    if ( self.hasChatroom( clusterid ) ) {
+      return chatrooms[ clusterid ];
     } else {
       let chatroom = new Chatroom( clusterid, wxchatroomid );
-      chatrooms.set( clusterid, chatroom );
+      //TODO: Vue.set() ?
+      chatrooms[ clusterid ] = chatroom;
       return chatroom;
     }
+  }
+  static hasChatroom( clusterid ) {
+    const self = this;
+    let chatrooms = self.getChatrooms();
+    return Object.keys( chatrooms ).includes( String( clusterid ) );
   }
   static getChatrooms() { return this.getInstance().chatrooms; }
   static getInstance() {
@@ -195,7 +171,7 @@ export class ChatroomFlyweightFactory {
     return ( function () {
       if ( !ctor.instance ) {
         ctor.instance = new ctor();
-        ctor.instance.chatrooms = new Map();
+        ctor.instance.chatrooms = {};
       }
       return ctor.instance;
     } )();

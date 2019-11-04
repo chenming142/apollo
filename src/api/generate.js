@@ -83,23 +83,28 @@ export class Generator {
   }
 
   static generateRecent( personalid, chattargettype ) {
+    console.log( '- generateRecent: personalid=' + personalid + ', chattargettype=' + chattargettype );
     chattargettype = chattargettype ? chattargettype : generateRdNum( 1, 2 );
 
     let chattargets, chattargetids, chattargetid, chattarget;
     if ( !personalid ) {
-      chattargets = chattargettype == __chattargettype__.friend ?
-        FriendFlyweightFatory.getFriends() :
-        ChatroomFlyweightFactory.getChatrooms();
+      chattargets = chattargettype == __chattargettype__.friend ? FriendFlyweightFatory.getFriends() : ChatroomFlyweightFactory.getChatrooms();
+      chattargets = Object.entries( chattargets ).map( item => item[ 1 ] );
     } else {
       let wechat = WechatFlyweightFactory.getWechat( personalid );
-      chattargets = chattargettype == __chattargettype__.friend ?
-        wechat.getFriendList() :
-        wechat.getChatroomList();
+      chattargets = chattargettype == __chattargettype__.friend ? wechat.getFriendList() : wechat.getChatroomList();
     }
-    chattargetids = [ ...chattargets ].map( item => item[ 0 ] );
+    console.log( '类型: ' + chattargettype + ',  个人号: ' + personalid, chattargets );
+    chattargetids = chattargettype == __chattargettype__.friend ?
+      chattargets.map( item => item[ 'friendid' ] ) :
+      chattargets.map( item => item[ 'clusterid' ] )
 
     chattargetid = chattargetids.getRdItem();
-    chattarget = chattargets.get( chattargetid );
+    //console.log( '- generateRecent -> 生成最近联系人: 类型' + chattargettype + ', 个人号：' + personalid, chattargetid );
+
+    chattarget = chattargettype == __chattargettype__.friend ?
+      chattargets.find( item => item.friendid === chattargetid ) :
+      chattargets.find( item => item.clusterid === chattargetid );
 
     let nickname = chattarget.getNickname(),
       wechatid = chattarget.getWechatid(),
@@ -125,7 +130,7 @@ export class Generator {
 
 export default class GeneratorFactory {
   static generateWechat( num ) {
-    wechatLog.info( "- generateWechat: " + num );
+    // wechatLog.info( "- generateWechat: " + num );
     GeneratorFactory.initQuantity[ 0 ] += num;
     let wechatInfos = Array.from( { length: num }, () => Generator.generateWechat() );
     wechatLog.info( wechatInfos );
@@ -136,7 +141,7 @@ export default class GeneratorFactory {
     } );
   }
   static generateFriend( num, personalid ) {
-    friendLog.info( "- generateFriend: " + num );
+    //friendLog.info( "- generateFriend: " + num );
     GeneratorFactory.initQuantity[ 1 ] += num;
     let friends = Array.from( { length: num }, () => Generator.generateFriend( personalid ) );
     friendLog.info( friends );
@@ -147,7 +152,7 @@ export default class GeneratorFactory {
     } );
   }
   static generateChatroom( num, personalid ) {
-    chatroomLog.info( "- generateChatroom: " + num );
+    //chatroomLog.info( "- generateChatroom: " + num );
     GeneratorFactory.initQuantity[ 2 ] += num;
     let chatrooms = Array.from( { length: num }, () => Generator.generateChatroom( personalid ) );
     chatroomLog.info( chatrooms );
@@ -157,12 +162,12 @@ export default class GeneratorFactory {
       chatroom.setExtraInfo( item );
     } );
   }
-  static generateRecent( num, personalid ) {
-    recentLog.info( "- generateRecent: " + num );
+  static generateRecent( num, personalid, chattargettype ) {
+    //recentLog.info( "- generateRecent: " + num );
     GeneratorFactory.initQuantity[ 3 ] += num;
     let recents = new Map();
     for ( let i = 0; i < num; i++ ) {
-      let recentInfo = Generator.generateRecent( personalid );
+      let recentInfo = Generator.generateRecent( personalid, chattargettype );
       let recent = RecentFactory.getRecentInstance( recentInfo );
       recent.setExtraInfo( recentInfo );
       recents.set( recent.getUniqKey(), recent );

@@ -30,7 +30,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="生成数量">
-              <el-input-number v-model="generateform.num" :min="0" :max="1000" label="生成个数"></el-input-number>
+              <el-input-number v-model="generateform.num" :min="1" :max="1000" label="生成个数"></el-input-number>
             </el-form-item>
             <el-form-item>
               <el-button type="success" @click="generate">开始生成数据</el-button>
@@ -120,6 +120,8 @@
           ],
           chattype: '1',
         },
+
+
         wechats: wechats
       }
     },
