@@ -94,13 +94,13 @@ export class Generator {
       let wechat = WechatFlyweightFactory.getWechat( personalid );
       chattargets = chattargettype == __chattargettype__.friend ? wechat.getFriendList() : wechat.getChatroomList();
     }
-    console.log( '类型: ' + chattargettype + ',  个人号: ' + personalid, chattargets );
+    // recentLog( '类型: ' + chattargettype + ',  个人号: ' + personalid, chattargets );
     chattargetids = chattargettype == __chattargettype__.friend ?
       chattargets.map( item => item[ 'friendid' ] ) :
       chattargets.map( item => item[ 'clusterid' ] )
 
     chattargetid = chattargetids.getRdItem();
-    //console.log( '- generateRecent -> 生成最近联系人: 类型' + chattargettype + ', 个人号：' + personalid, chattargetid );
+    // recentLog( '- generateRecent -> 生成最近联系人: 类型' + chattargettype + ', 个人号：' + personalid, chattargetid );
 
     chattarget = chattargettype == __chattargettype__.friend ?
       chattargets.find( item => item.friendid === chattargetid ) :
@@ -157,8 +157,8 @@ export default class GeneratorFactory {
     let chatrooms = Array.from( { length: num }, () => Generator.generateChatroom( personalid ) );
     chatroomLog.info( chatrooms );
     chatrooms.forEach( item => {
-      let { clusterid, wechatid } = item;
-      let chatroom = ChatroomFlyweightFactory.getChatroom( clusterid, wechatid );
+      let { clusterid, wxchatroomid } = item;
+      let chatroom = ChatroomFlyweightFactory.getChatroom( clusterid, wxchatroomid );
       chatroom.setExtraInfo( item );
     } );
   }

@@ -26,7 +26,7 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
     this.setAttributes( Wechat.attributes );
   }
   setExtraInfo( extraInfo ) {
-    wechatLog.info( '- setExtraInfo', extraInfo );
+    // wechatLog.info( '- setExtraInfo', extraInfo );
     this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
   }
@@ -112,38 +112,7 @@ export default class WechatFactory {
   }
   static getWechatByApi( personalid ) {
     wechatLog.info( "- 调用Api接口，获取个人号：" + personalid );
-    let _wechats = [ {
-      personalid: 9661,
-      wechatid: "wxid_2tvf9y1ndag622",
-      wechatno: "wg18601",
-      nickname: "乌云125",
-      headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/ZedicGuxtb6ISND1u5Jnx3AmUIbJy7pjC6NgUs1mbibibVg4zDYGoUvaAdPv1NUd6PCDTFxqD4icN6icNYT1kVmD0ySSHHmTMSVvsrvgic4hRNB3s/0",
-      remark: "",
-      onlinestatus: 0,
-      unreadmsgcnt: 0,
-      notthroughcount: 0
-    }, {
-      personalid: 9676,
-      wechatid: "wxid_peib914d9kw222",
-      wechatno: "",
-      nickname: "爱拼不会赢1",
-      headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/KhHc3zD3ESlsAFLoLypHqjEZWHvSkknOdoYk09xoTEmHwjblnibPKScDGAepMicR4CqwN0MicIWIqwxxqS1yzqJdichbZLy8icn3POEb94rZhEHE/0",
-      remark: "",
-      onlinestatus: 1,
-      unreadmsgcnt: 0,
-      notthroughcount: 0
-    }, {
-      personalid: 9658,
-      wechatid: "wxid_xin84739fdfhd089",
-      wechatno: "",
-      nickname: "爱河中划船",
-      headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/KhHc3zD3ESlsAFLoLypHqjEZWHvSkknOdoYk09xoTEmHwjblnibPKScDGAepMicR4CqwN0MicIWIqwxxqS1yzqJdichbZLy8icn3POEb94rZhEHE/0",
-      remark: "",
-      onlinestatus: 0,
-      unreadmsgcnt: 0,
-      notthroughcount: 0
-    } ];
-    let wechatInfo = _wechats.find( item => item.personalid === personalid );
+    let wechatInfo = WechatFlyweightFactory.getWechat( personalid );
     if ( !wechatInfo ) {
       throw Error( "- 调用Api接口，获取个人号：" + personalid + ",失败~" );
     }
@@ -176,6 +145,7 @@ export class WechatFlyweightFactory {
     }
     return -1;
   }
+  static getWechatSize() { return this.getWechats().length; }
   static getWechats() { return this.getInstance().wechats; }
   static getInstance() {
     const ctor = this;

@@ -94,26 +94,13 @@ export default class WechatInfoFactory {
   static checkWechatInfoNew( wechatid ) {
     const self = this;
     let wechatInfos = WechatInfoFlyweightFactory.getWechatInfos();
-    if ( !wechatInfos.has( wechatid ) ) {
+    if ( !wechatInfos.hasWechatInfo( wechatid ) ) {
       return self.getWechatInfoByApi( wechatid );
     }
     return WechatInfoFlyweightFactory.getWechatInfo( wechatid );
   }
   static getWechatInfoByApi( wechatid ) {
-    let wechatInfos = [ {
-      wechatid: "wxid_5kh88cpn8ez322",
-      wechatno: "liq_test",
-      nickname: "无处可逃uu让",
-      headimgurl: "http://wx.qlogo.cn/mmhead/ver_1/YXaZpbXWFiazbg87rAbYlI0XIrge3aTyYACXQLnibsBHCbuic43TGWPUXHjJzM4yDsOUAQ9tPJ8pFghEBBRUsZ9ds4RydgeKFM0LNfsgVeRdKM/0",
-      remark: "",
-      sex: 1,
-      mobile: "",
-      country: "",
-      provice: "阿尔及利亚",
-      city: "",
-      taglist: [],
-    } ];
-    let _wechatInfo = wechatInfos.find( item => item.wechatid === wechatid );
+    let _wechatInfo = WechatInfoFlyweightFactory.getWechatInfo( wechatid );
     if ( !_wechatInfo ) {
       wechatInfoLog.error( "- 调用Api接口，获取微信基础信息：" + wechatid + ",失败~" );
     }
@@ -127,23 +114,28 @@ export class WechatInfoFlyweightFactory {
     const self = this;
     let wechatInfos = self.getWechatInfos(),
       wechatInfo;
-    if ( wechatInfos.has( wechatid ) ) {
-      wechatInfo = wechatInfos.get( wechatid );
+    if ( self.hasWechatInfo( wechatid ) ) {
+      wechatInfo = wechatInfos[ wechatid ];
       return wechatInfo;
     } else {
       let wechatInfo = new WechatInfo( wechatid );
-      wechatInfos.set( wechatid, wechatInfo );
+      wechatInfos[ wechatid ] = wechatInfo;
       return wechatInfo;
     }
   }
-  static getWechatInfosSize() { return this.getWechatInfos().size; }
+  static hasWechatInfo( wechatid ) {
+    const self = this;
+    let wechatInfos = self.getWechatInfos();
+    return Object.keys( wechatInfos ).includes( String( wechatid ) );
+  }
+  static getWechatInfosSize() { return Object.keys( this.getWechatInfos() ).length; }
   static getWechatInfos() { return this.getInstance().wechatInfos; }
   static getInstance() {
     const ctor = this;
     return ( function () {
       if ( !ctor.instance ) {
         ctor.instance = new ctor();
-        ctor.instance.wechatInfos = new Map();
+        ctor.instance.wechatInfos = {};
       }
       return ctor.instance;
     } )();

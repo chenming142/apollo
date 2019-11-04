@@ -165,6 +165,7 @@ export class ChatroomFlyweightFactory {
     let chatrooms = self.getChatrooms();
     return Object.keys( chatrooms ).includes( String( clusterid ) );
   }
+  static getChatroomSize() { return Object.keys( this.getChatrooms() ).length; }
   static getChatrooms() { return this.getInstance().chatrooms; }
   static getInstance() {
     const ctor = this;

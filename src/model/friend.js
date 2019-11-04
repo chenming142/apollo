@@ -94,6 +94,7 @@ export class FriendFlyweightFatory {
     let friends = self.getFriends();
     return Object.keys( friends ).includes( String( friendid ) );
   }
+  static getFriendSize() { return Object.keys( this.getFriends() ).length; }
   static getFriends() { return this.getInstance().friends; }
   static getInstance() {
     const ctor = this;

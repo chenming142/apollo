@@ -161,6 +161,7 @@ export class RecentFlyweightFactory {
       return recentList.findIndex( item => item.getUniqKey() === uniqKey );
     }
   }
+  static getRecentSize() { return this.getRecentList().length; }
   static getRecentList() { return this.getInstance().recentList; }
   static getInstance() {
     const ctor = this;
