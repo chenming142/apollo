@@ -34,10 +34,7 @@ export class ExtraInfo {
       this[ key ] = val;
     }
   }
-
-  getWechatInfo() {
-    return WechatInfoFlyweightFactory.getWechatInfo( this.wechatInfoKey );
-  }
+  getWechatInfo() { return WechatInfoFlyweightFactory.getWechatInfo( this.wechatInfoKey ); }
 }
 
 export function ExtraInfoMixin( Base ) {
@@ -59,6 +56,13 @@ export function ExtraInfoMixin( Base ) {
       } else {
         return super.setExtraInfoByKey( key, val );
       }
+    }
+    setExtraInfoByKeyVal( keyVals ) {
+      const self = this;
+      Object.entries( keyVals ).forEach( ( [ key, val ] ) => {
+        self.setExtraInfoByKey( key, val );
+      } );
+      self.reactiveSubordinate();
     }
     _specificPropertiesMethod() {
       const self = this;

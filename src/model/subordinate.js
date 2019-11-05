@@ -49,6 +49,12 @@ export default function SubordinatorMixin( Base ) {
         subordinator.establish( this.identity(), this );
       }
     }
+    reactiveSubordinate() {
+      let subordinator = this.findSubordinator();
+      if ( subordinator ) {
+        subordinator.responsive( this.identity(), this );
+      }
+    }
     relieveSubordinate() {
       let subordinator = this.findSubordinator();
       if ( subordinator ) {
@@ -79,6 +85,14 @@ export function SubordinateBehaviorMixin( Base ) {
       let subordinator = self.getSubordinator( clazz );
       if ( subordinator.indexOf( identity ) <= -1 ) {
         subordinator.push( identity );
+      }
+    }
+    responsive( identity, clazz ) {
+      const self = this;
+      let subordinator = self.getSubordinator( clazz );
+      let index = subordinator.indexOf( identity );
+      if ( index > -1 ) {
+        subordinator.splice( index, 1, identity );
       }
     }
     relieve( identity, clazz ) {

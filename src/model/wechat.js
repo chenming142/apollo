@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import publisher, { Publisher } from "../api/Publisher";
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import { SubordinateBehaviorMixin } from './subordinate';
 
@@ -24,6 +25,17 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
     this.notthroughcount = 0;
 
     this.setAttributes( Wechat.attributes );
+    this.bindingUnreadmsgcntChangedEvt();
+  }
+  bindingUnreadmsgcntChangedEvt() {
+    const self = this;
+    let unreadmsgcntChangeEvtKey = Publisher.EVENT_KEYS.unreadmsgcntChange + self.personalid;
+    publisher.on( unreadmsgcntChangeEvtKey, function ( { personalid, unreadmsgcnt } ) {
+      // wechatLog.info( ' - bindingUnreadmsgcntChangedEvt  personalid = ' + personalid + ' unreadmsgcnt = ' + unreadmsgcnt );
+      if ( self.personalid === personalid ) {
+        self.calcUnreadmsgcnt( unreadmsgcnt );
+      }
+    } );
   }
   setExtraInfo( extraInfo ) {
     // wechatLog.info( '- setExtraInfo', extraInfo );
@@ -39,6 +51,7 @@ export class Wechat extends SubordinateBehaviorMixin( ExtraInfoMixin( ExtraInfo 
     let _unreadmsgcnt = self[ 'unreadmsgcnt' ];
     unreadmsgcnt += _unreadmsgcnt;
     unreadmsgcnt = Math.max( unreadmsgcnt, 0 );
+    // wechatLog.info( ' - calcUnreadmsgcnt: unreadmsgcnt = ' + unreadmsgcnt );
     this.setExtraInfoByKey( 'unreadmsgcnt', unreadmsgcnt );
   }
   calcNotthroughcount( notthroughcount ) {

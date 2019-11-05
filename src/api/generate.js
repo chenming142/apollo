@@ -28,9 +28,9 @@ export class Generator {
       nickname: nickname,
       headimgurl: rd.image( "120x120", "#894FC4", "#FFF", "png", nickname ),
       remark: rd.cparagraph(),
-      "unreadmsgcnt|50-100": 1,
-      "notthroughcount|0-50": 1,
-      "onlinestatus|0-1": 1
+      "unreadmsgcnt": 0,
+      "notthroughcount": 0,
+      "onlinestatus|1-3": 1
     } );
   }
 
@@ -45,7 +45,7 @@ export class Generator {
       "wechatno": /[0-9A-Za-z]{4,11}/,
       nickname: nickname,
       headimgurl: rd.image( "120x120", "#894FC4", "#FFF", "png", nickname ),
-      remark: rd.cparagraph(),
+      remark: rd.cword( 3, 8 ),
       groupid: 0,
       "sex|0-2": 1,
       mobile: "",
@@ -83,7 +83,6 @@ export class Generator {
   }
 
   static generateRecent( personalid, chattargettype ) {
-    console.log( '- generateRecent: personalid=' + personalid + ', chattargettype=' + chattargettype );
     chattargettype = chattargettype ? chattargettype : generateRdNum( 1, 2 );
 
     let chattargets, chattargetids, chattargetid, chattarget;
@@ -165,12 +164,12 @@ export default class GeneratorFactory {
   static generateRecent( num, personalid, chattargettype ) {
     //recentLog.info( "- generateRecent: " + num );
     GeneratorFactory.initQuantity[ 3 ] += num;
-    let recents = new Map();
+    let recents = [];
     for ( let i = 0; i < num; i++ ) {
       let recentInfo = Generator.generateRecent( personalid, chattargettype );
       let recent = RecentFactory.getRecentInstance( recentInfo );
       recent.setExtraInfo( recentInfo );
-      recents.set( recent.getUniqKey(), recent );
+      recents.push( recent );
     }
     recentLog.info( recents );
   }

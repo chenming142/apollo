@@ -58,6 +58,10 @@ function parseSignalRMessageInfo( messageInfo ) {
         messageLog.info( "--- receive[CmdClusterInfoChanged]" );
         instance.$emit( __events__.CHATROOM_INFO_CHANGED, message );
         break;
+      case "CmdPersonalStatusChange":
+        messageLog.info( "--- receive[CmdPersonalStatusChange]" );
+        instance.$emit( __events__.WECHAT_ACCOUNTS_ALIVE_STATUS, message );
+        break;
       default:
         messageLog.warn( "消息事件尚未实现: " + cmdtype, message );
     }
@@ -519,6 +523,22 @@ export function onChatroomInfoChanged() {
   parseSignalRMessageInfo( messageInfo );
 }
 
+export function onPersonalStatsChanged( personalid, onlinestatus ) {
+  personalid = personalid ? personalid : WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
+  onlinestatus = onlinestatus ? onlinestatus : [ 1, 2, 3 ].getRdItem();
+  let messageInfo = {
+    "cmdtypecode": 0,
+    "cmdtype": "CmdPersonalStatusChange",
+    "locmsgid": null,
+    "personalid": personalid,
+    "userid": 53,
+    "onlinestatus": onlinestatus,
+    "remarks": "",
+    "time": 1561088529224
+  }
+  parseSignalRMessageInfo( messageInfo );
+}
+
 // --- 事件接收器
 instance.$on( __events__.NEW_MESSAGE, function newMessage( messageInfo ) {
   messageLog.info( "--- process[" + __events__.NEW_MESSAGE + "]" );
@@ -566,6 +586,15 @@ instance.$on( __events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged( 
   let wechats = WechatFlyweightFactory.getWechats();
   wechats.forEach( item => item.toString() );
   messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos() );
+} );
+
+instance.$on( __events__.WECHAT_ACCOUNTS_ALIVE_STATUS, function onPersonalStatsChanged( wechatInfo ) {
+  messageLog.info( "--- process[" + __events__.WECHAT_ACCOUNTS_ALIVE_STATUS + "]" );
+  let { personalid, onlinestatus } = wechatInfo;
+  let wechat = WechatFlyweightFactory.getWechat( personalid );
+  if ( wechat ) {
+    wechat.setOnlineStatus( onlinestatus );
+  }
 } );
 
 

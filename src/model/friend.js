@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import publisher, { Publisher } from "../api/Publisher";
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin from "./subordinate";
 
@@ -40,11 +41,16 @@ export class Friend extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {
         break;
     }
   }
-
-  remove() { FriendFatory.delete( this.friendid ); }
+  remove() { FriendFatory.delete( this ); }
+  refreshUnreadmsgCnt( unreadmsgcnt ) {
+    let { personalid } = this;
+    let evtKey = Publisher.EVENT_KEYS.unreadmsgcntChange + personalid;
+    // friendLog.info( ' - refreshUnreadmsgCnt: personalid = ' + personalid + ' unreadmsgcnt = ' + unreadmsgcnt );
+    publisher.emit( evtKey, { personalid, unreadmsgcnt } );
+  }
   identity() { return this.friendid; }
 }
-Friend.attributes = [ "personalid", "friendsid", "groupid", "sex", "mobile", "country", "provice", "city", "taglist", "datastatus", "attributioncustomer", "prevattribution", "prevcustomer", "messageunreadcount" ];
+Friend.attributes = [ "personalid", "friendsid", "groupid", "remark", "sex", "mobile", "country", "provice", "city", "taglist", "datastatus", "attributioncustomer", "prevattribution", "prevcustomer", "messageunreadcount" ];
 
 export default class FriendFatory {
   static checkFriendNew( friendid ) {
@@ -58,10 +64,12 @@ export default class FriendFatory {
     let friends = FriendFlyweightFatory.getFriends();
     return friendids.reduce( ( ret, friendid ) => ret.concat( [ friends[ friendid ] ] ), [] );
   }
-  static delete( friendid ) {
+  static delete( friend ) {
     const self = this;
+    let { friendid } = friend;
     let friends = FriendFlyweightFatory.getFriends();
-    if ( friends.hasFriend( friendid ) ) {
+    if ( FriendFlyweightFatory.hasFriend( friendid ) ) {
+      friend.relieveSubordinate();
       delete friends[ friendid ];
     }
   }
