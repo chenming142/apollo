@@ -1,3 +1,4 @@
+import publisher, { Publisher } from "../api/Publisher";
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin, { SubordinateBehaviorMixin } from "./subordinate";
 
@@ -29,27 +30,12 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     this.checkSubordinatorNew();
     this.establishSubordinate();
     this.generateMembers();
-    this.calcMessageunreadcount();
   }
 
-  calcMessageunreadcount() {
-    const self = this;
-    let { changetype, messageunreadcount } = self;
-    if ( messageunreadcount ) {
-      let wechat = self.findSubordinator();
-      switch ( changetype ) {
-        case __changetype__.ADD:
-          break;
-        case __changetype__.MODIFY:
-          //TODO: 修改如何处理 ？
-          messageunreadcount = 0;
-          break;
-        case __changetype__.REMOVE:
-          messageunreadcount *= -1;
-          break;
-      }
-      wechat.calcUnreadmsgcnt( messageunreadcount );
-    }
+  refreshUnreadmsgCnt( unreadmsgcnt ) {
+    let { personalid } = this;
+    let evtKey = Publisher.EVENT_KEYS.unreadmsgcntChange + personalid;
+    publisher.emit( evtKey, { personalid, unreadmsgcnt } );
   }
   onChatroomInfoChangeHandle( changetype ) {
     const self = this;
@@ -70,6 +56,10 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     }
   }
 
+  getMemberList() {
+    let { clusterid } = this;
+    return ChatroomFactory.getChatroomMemberlistByApi( clusterid );
+  }
   generateMembers() {
     const self = this;
     let { clusterid, memberlist } = self;
@@ -136,7 +126,7 @@ export default class ChatroomFactory {
     }
   }
   static getChatroomByApi( clusterid ) {
-    chatroomLog.info( "- 调用Api接口，获取好友：" + clusterid );
+    chatroomLog.info( "- 调用Api接口，获取群：" + clusterid );
     let chatroomInfo = ChatroomFlyweightFactory.getChatroom( clusterid );
     if ( !chatroomInfo ) {
       chatroomLog.error( "- 调用Api接口，获取群：" + clusterid + ",失败~" );
@@ -144,6 +134,9 @@ export default class ChatroomFactory {
     let { wxchatroomid } = chatroomInfo;
     let chatroom = this.getChatroom( clusterid, wxchatroomid );
     chatroom.setExtraInfo( chatroomInfo );
+  }
+  static getChatroomMemberlistByApi( clusterid ) {
+    chatroomLog.info( "- 调用Api接口，获取群成员列表：" + clusterid );
   }
 }
 

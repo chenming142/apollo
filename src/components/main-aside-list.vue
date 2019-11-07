@@ -125,7 +125,92 @@
         </el-tab-pane>
 
         <!-- 群操作 -->
-        <el-tab-pane label="群操作">群操作</el-tab-pane>
+        <el-tab-pane label="群操作">
+          <el-divider content-position="left">更改群信息</el-divider>
+          <el-form ref="personalOpt" :model="chatroomOptForm" label-width="120px" class="personalOpt">
+            <el-form-item label="所属个人号">
+              <el-select v-model="chatroomOptForm.personalid" clearable placeholder="请选择">
+                <el-option v-for="item in wechats" 
+                  :key="item.personalid" 
+                  :label="item.getNickname()"
+                  :value="item.personalid">
+                  <span style="float: left">{{ item.personalid + '-' + item.getNickname() }}</span>
+                  <span style="float: right; color: #8492a6; font-size: 13px">{{ '群数: '+ item.getChatroomList().length  }}</span>
+                </el-option>
+              </el-select>
+              <el-button @click="addChatroomOpt" type="success" icon="el-icon-plus" circle></el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-table :data="chatroomData" border style="width: 100%">
+                <el-table-column prop="clusterid" label="clusterid" width="80" fixed></el-table-column>
+                <el-table-column prop="wxchatroomid" label="wxchatroomid" width="120" fixed></el-table-column>
+                <el-table-column label="群成员" width="160" fixed>
+                  <template slot-scope="scope">
+                    <el-badge :value="scope.row.membercount" :max="99" class="membercount">
+                      <el-dropdown>
+                        <el-button type="primary">
+                          成员列表<i class="el-icon-arrow-down el-icon--right"></i>
+                        </el-button>
+                        <el-dropdown-menu slot="dropdown">
+                          <el-dropdown-item v-for="member in scope.row.memberlist">{{member.memberid}}</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </el-dropdown>
+                    </el-badge>
+                  </template>
+                </el-table-column>
+
+                <el-table-column label="群名称" width="120">
+                  <template slot-scope="scope">
+                    <el-input v-if="scope.row.type == changetype.MODIFY" v-model="scope.row.clustername"></el-input>
+                    <span v-else v-text="scope.row.clustername"></span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="群备注" width="120">
+                  <template slot-scope="scope">
+                    <el-input v-if="scope.row.type == changetype.MODIFY" v-model="scope.row.remark"></el-input>
+                    <span v-else v-text="scope.row.remark"></span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="未读数" width="120">
+                  <template slot-scope="scope">
+                    <el-input-number style="width:100px;" v-if="scope.row.type == changetype.MODIFY" size="small" v-model="scope.row.messageunreadcount" :min="0" :max="99"></el-input-number>
+                    <span v-else v-text="scope.row.messageunreadcount"></span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="groupid" label="groupid" width="80"></el-table-column>
+                <el-table-column label="群名回归名称" width="120">
+                  <template slot-scope="scope">
+                    <el-input v-if="scope.row.type == changetype.MODIFY" v-model="scope.row.returnname"></el-input>
+                    <span v-else v-text="scope.row.returnname"></span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="是否群名回归" width="100">
+                  <template slot-scope="scope">
+                    <el-switch v-model="scope.row.isreturnname" active-color="#13ce66" inactive-color="#ff4949" active-value="1" inactive-value="0"></el-switch>
+                  </template>
+                </el-table-column>
+                <el-table-column label="isowner" width="80">
+                  <template slot-scope="scope">
+                    <el-switch v-model="scope.row.isowner" active-color="#13ce66" inactive-color="#ff4949" active-value="1" inactive-value="0"></el-switch>
+                  </template>
+                </el-table-column>
+                <el-table-column label="ismanager" width="90">
+                  <template slot-scope="scope">
+                    <el-switch v-model="scope.row.ismanager" active-color="#13ce66" inactive-color="#ff4949" active-value="1" inactive-value="0"></el-switch>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="ownerallowflag" label="ownerallowflag" width="110"></el-table-column>
+
+                <el-table-column fixed="right" label="操作" width="120">
+                  <template slot-scope="scope">
+                    <el-button @click="editChatroomOpt(scope.row)" type="primary" icon="el-icon-edit" circle></el-button>
+                    <el-button @click="deleteChatroomOpt(scope.row)" type="danger" icon="el-icon-delete" circle></el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
 
         <!-- 消息处理 -->
         <el-tab-pane label="消息处理">消息处理</el-tab-pane>
@@ -359,6 +444,9 @@
           personalid: null,
           type: 2,
         },
+        chatroomOptForm: {
+          personalid: null,
+        },
 
         changetype: __changetype__,
         wechats: WechatFlyweightFactory.getWechats(),
@@ -389,6 +477,32 @@
           });
         }
         return [];
+      },
+      chatroomData () {
+        let { personalid } = this.chatroomOptForm;
+        personalid = personalid ? personalid :  WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
+        let wechat = WechatFlyweightFactory.getWechat(personalid);
+        if(wechat) {
+          return wechat.getChatroomList().map(item => {
+            return {
+              type: 0,
+              clusterid: item.clusterid,
+              groupid: item.groupid,
+              wxchatroomid: item.getWechatid(),
+              clustername: item.getNickname(),
+              headimgurl: item.getHeadimgurl(),
+              remark: item.remark,
+              membercount: item.membercount,
+              messageunreadcount: item.messageunreadcount,
+              memberlist: item.memberlist,
+              returnname: item.returnname,
+              isreturnname: item.isreturnname,
+              isowner: item.isowner,
+              ismanager: item.ismanager,
+              ownerallowflag: item.ownerallowflag
+            };
+          });
+        }
       }
     },
     methods: {
@@ -409,6 +523,7 @@
           break;
         }
       },
+
       personalOpt () {
         let { personalid, onlinestatus } = this.personalOptForm;
         onPersonalStatsChanged(personalid, onlinestatus);
@@ -429,7 +544,11 @@
           wechat.setNotthroughcount(notthroughcount);
         }
       },
-      addFriendOpt () {},
+
+      addFriendOpt () {
+        let { personalid } = this.friendOptForm;
+        GeneratorFactory.generateFriend(1, personalid);
+      },
       editFriendOpt (item) {
         let { type } = item;
         if(!type) {
@@ -451,6 +570,26 @@
         if(friend) {
           friend.refreshUnreadmsgCnt(-messageunreadcount);
           friend.remove();
+        }
+      },
+
+      addChatroomOpt () {
+        let { personalid } = this.chatroomOptForm;
+        GeneratorFactory.generateChatroom(1, personalid);
+      },
+      editChatroomOpt (item) {
+        let { type } = item;
+        if(!type) {
+          item.type = __changetype__.MODIFY;
+        } else if(type === __changetype__.MODIFY) {
+          item.type = 0;
+          let { personalid } = this.chatroomOptForm;
+          let { clusterid, clustername, remark, groupid, messageunreadcount } = item;
+          let chatroom = ChatroomFlyweightFactory.getChatroom(clusterid);
+          if(chatroom) {
+            chatroom.setExtraInfoByKeyVal({clustername, remark, groupid, messageunreadcount});
+            chatroom.refreshUnreadmsgCnt(messageunreadcount);
+          }
         }
       }
     }
@@ -475,6 +614,8 @@
   .state .el-collapse-item__header, .personal .el-collapse-item__header {height: 36px;line-height: 36px;}
   .personal .el-collapse-item__header button {padding: 5px;margin-left: 12px;}
   .personal .el-collapse-item__header .el-badge sup {top: 10px;}
+
+  .membercount.el-badge sup {top: 9px;}
 
   pre {text-align:left;outline: 1px solid #ccc; padding: 5px; margin: 5px; }
   .string { color: green; }

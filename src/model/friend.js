@@ -45,7 +45,6 @@ export class Friend extends SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) {
   refreshUnreadmsgCnt( unreadmsgcnt ) {
     let { personalid } = this;
     let evtKey = Publisher.EVENT_KEYS.unreadmsgcntChange + personalid;
-    // friendLog.info( ' - refreshUnreadmsgCnt: personalid = ' + personalid + ' unreadmsgcnt = ' + unreadmsgcnt );
     publisher.emit( evtKey, { personalid, unreadmsgcnt } );
   }
   identity() { return this.friendid; }
