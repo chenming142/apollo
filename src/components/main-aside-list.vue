@@ -629,7 +629,7 @@
       }
     }
   }
-</scrip群
+</script>
 
 <style>
   div.state {border:1px solid #EBEEF5;border-radius: 5px;margin: 20px;padding: 30px 10px 10px;}
