@@ -161,7 +161,9 @@
                       <el-dropdown split-button @click="transferFriendOpt(scope.row)" style="margin-left: 3px;">
                         成员列表
                         <el-dropdown-menu slot="dropdown">
-                          <el-dropdown-item v-for="member in scope.row.memberlist">{{member.memberid}}</el-dropdown-item>
+                          <el-dropdown-item v-for="member in chatroomMember(scope.row.clusterid)">
+                            {{member.memberid + '-' + member.getNickname() }}
+                          </el-dropdown-item>
                         </el-dropdown-menu>
                       </el-dropdown>
                     </el-badge>
@@ -523,6 +525,13 @@
               ownerallowflag: item.ownerallowflag
             };
           });
+        }
+      },
+      chatroomMember () {
+        return function(clusterid){
+          let chatroom = ChatroomFlyweightFactory.getChatroom(clusterid);
+          let memberIds = chatroom.memberIds;
+          return chatroom.getMemberListByMemberIds(memberIds);
         }
       }
     },
