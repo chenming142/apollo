@@ -92,7 +92,7 @@
             </el-form-item>
             <el-form-item>
               <el-table :data="friendData" border style="width: 100%">
-                <el-table-column prop="friendsid" label="friendsid" width="120" fixed></el-table-column>
+                <el-table-column prop="friendsid" label="friendsid" width="80" fixed></el-table-column>
                 <el-table-column prop="wechatid" label="wechatid" fixed width="160"></el-table-column>
                 <el-table-column label="昵称">
                   <template slot-scope="scope">
@@ -107,16 +107,27 @@
                   </template>
                 </el-table-column>
                 <el-table-column prop="groupid" label="分组"></el-table-column>
-                <el-table-column label="未读数">
+                <el-table-column label="未读数" width="120">
                   <template slot-scope="scope">
                     <el-input-number style="width:100px;" v-if="scope.row.type == changetype.MODIFY" size="small" v-model="scope.row.messageunreadcount" :min="0" :max="99"></el-input-number>
                     <span v-else v-text="scope.row.messageunreadcount"></span>
                   </template>
                 </el-table-column>
-                <el-table-column fixed="right" label="操作" width="120">
+                <el-table-column fixed="right" label="操作" width="210">
                   <template slot-scope="scope">
                     <el-button @click="editFriendOpt(scope.row)" type="primary" icon="el-icon-edit" circle></el-button>
                     <el-button @click="deleteFriendOpt(scope.row)" type="danger" icon="el-icon-delete" circle></el-button>
+
+                    <el-dropdown split-button @command="transferFriendOpt" style="margin-left: 3px;">
+                      转接好友
+                      <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item v-if="item.personalid != scope.row.personalid"
+                          v-for="item in wechats" :key="item.personalid"
+                          :command="{personalid: item.personalid, item: scope.row}">
+                          {{item.personalid + '-' + item.getNickname() +' ['+ item.getFriendList().length +']'}}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </el-dropdown>
                   </template>
                 </el-table-column>
               </el-table>
@@ -147,10 +158,8 @@
                 <el-table-column label="群成员" width="160" fixed>
                   <template slot-scope="scope">
                     <el-badge :value="scope.row.membercount" :max="99" class="membercount">
-                      <el-dropdown>
-                        <el-button type="primary">
-                          成员列表<i class="el-icon-arrow-down el-icon--right"></i>
-                        </el-button>
+                      <el-dropdown split-button @click="transferFriendOpt(scope.row)" style="margin-left: 3px;">
+                        成员列表
                         <el-dropdown-menu slot="dropdown">
                           <el-dropdown-item v-for="member in scope.row.memberlist">{{member.memberid}}</el-dropdown-item>
                         </el-dropdown-menu>
@@ -201,14 +210,25 @@
                 </el-table-column>
                 <el-table-column prop="ownerallowflag" label="ownerallowflag" width="110"></el-table-column>
 
-                <el-table-column fixed="right" label="操作" width="120">
+                <el-table-column fixed="right" label="操作" width="215">
                   <template slot-scope="scope">
                     <el-button @click="editChatroomOpt(scope.row)" type="primary" icon="el-icon-edit" circle></el-button>
                     <el-button @click="deleteChatroomOpt(scope.row)" type="danger" icon="el-icon-delete" circle></el-button>
+                    
+                    <el-dropdown split-button @command="transferChatroomOpt" style="margin-left: 3px;">
+                      转接群
+                      <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item v-if="item.personalid != scope.row.personalid"
+                            v-for="item in wechats"  :key="item.personalid"
+                            :command="{personalid: item.personalid, item: scope.row}">
+                          {{item.personalid + '-' + item.getNickname()+' ['+ item.getChatroomList().length +']'}}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </el-dropdown>
                   </template>
                 </el-table-column>
               </el-table>
-            </el-form-item>
+            </el-form-item> 
           </el-form>
         </el-tab-pane>
 
@@ -391,9 +411,6 @@
       </el-card>
     </el-main>
 
-    <el-footer>
-      数据统计区
-    </el-footer>
   </el-container>
 </template>
 
@@ -450,6 +467,8 @@
 
         changetype: __changetype__,
         wechats: WechatFlyweightFactory.getWechats(),
+        wechatInfos: WechatInfoFlyweightFactory.getWechatInfos(),
+        chatrooms: ChatroomFlyweightFactory.getChatrooms(),
 
         WechatInfoFlyweightFactory: WechatInfoFlyweightFactory,
         WechatFlyweightFactory: WechatFlyweightFactory,
@@ -468,6 +487,7 @@
             return {
               type: 0, // CHANGETYPE
               friendsid: item.friendsid,
+              personalid: item.personalid,
               wechatid: item.getWechatid(),
               nickname: item.getNickname(),
               remark: item.remark,
@@ -486,6 +506,7 @@
           return wechat.getChatroomList().map(item => {
             return {
               type: 0,
+              personalid: item.personalid,
               clusterid: item.clusterid,
               groupid: item.groupid,
               wxchatroomid: item.getWechatid(),
@@ -572,6 +593,13 @@
           friend.remove();
         }
       },
+      transferFriendOpt({personalid, item}){
+        let { friendsid } = item;
+        let friend = FriendFlyweightFatory.getFriend(friendsid);
+        if (friend) {
+          friend.transferSubordinate(personalid);
+        }
+      },
 
       addChatroomOpt () {
         let { personalid } = this.chatroomOptForm;
@@ -591,10 +619,17 @@
             chatroom.refreshUnreadmsgCnt(messageunreadcount);
           }
         }
+      },
+      transferChatroomOpt({personalid, item}){
+        let { clusterid } = item;
+        let chatroom = ChatroomFlyweightFactory.getChatroom(clusterid);
+        if (chatroom) {
+          chatroom.transferSubordinate(personalid);
+        }
       }
     }
   }
-</script>
+</scrip群
 
 <style>
   div.state {border:1px solid #EBEEF5;border-radius: 5px;margin: 20px;padding: 30px 10px 10px;}

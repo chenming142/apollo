@@ -30,10 +30,12 @@ export default function SubordinatorMixin( Base ) {
       if ( this instanceof ChatroomMember ) {
         let { clusterid } = this;
         subordinateKey = clusterid;
+        // chatroomLog.info( '- SubordinatorMixin.findSubordinator: ' + subordinateKey, JSON.stringify( this ) );
         subordinator = ChatroomFlyweightFactory.getChatroom( subordinateKey );
       } else {
         let { personalid } = this;
         subordinateKey = personalid;
+        //chatroomLog.info( '- SubordinatorMixin.findSubordinator: ' + subordinateKey, JSON.stringify( this ) );
         subordinator = WechatFlyweightFactory.getWechat( subordinateKey );
       }
 
@@ -60,6 +62,11 @@ export default function SubordinatorMixin( Base ) {
       if ( subordinator ) {
         subordinator.relieve( this.identity(), this );
       }
+    }
+    transferSubordinate( personalid ) {
+      this.relieveSubordinate();
+      this.setExtraInfoByKey( 'personalid', personalid );
+      this.establishSubordinate();
     }
   };
 }

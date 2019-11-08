@@ -63,20 +63,24 @@ export class Generator {
   static generateChatroom( personalid ) {
     personalid = personalid ? personalid : WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
     let clustername = rd.cword( 3, 10 );
+    let clusterid = rd.increment( 30001 );
+    let membercount = rd.integer( 1, 20 );
+    let memberlist = Array.from( { length: membercount }, () => Generator.generateChatroomMember( clusterid ) );
 
     return Mock.mock( {
       personalid: personalid,
-      clusterid: rd.increment( 30001 ),
+      clusterid: clusterid,
       groupid: 0,
       "wxchatroomid": /[1-9][0-9]{10}@chatroom/,
       clustername: clustername,
       headimgurl: rd.image( "120x120", "#894FC4", "#FFF", "png", clustername ),
-      remark: "",
+      remark: rd.cword( 3, 8 ),
       isowner: 1,
       ownerwechatid: "wxid_2tvf9y1ndag622",
       "isreturnname|0-1": 1,
       returnname: rd.cword( 3, 10 ),
-      "membercount|1-20": 1,
+      "membercount": membercount,
+      memberlist: memberlist,
       "datastatus|1-2": 1,
       "ownerallowflag|0-1": 1
     } );
@@ -123,6 +127,24 @@ export class Generator {
       /*{ issend: 0, locmsgid: "15719712905370006", msgtype: 50001, content: "admin 将此好友从 系统 转接给 13800000000(admin)", createtimestamp: 1571971290537 }*/
       "datastatus|1-2": 1,
       "disturbsetting|1-2": 1,
+    } );
+  }
+
+  static generateChatroomMember( clusterid ) {
+    let nickname = rd.cname();
+    return Mock.mock( {
+      clusterid: clusterid,
+      memberid: rd.increment( 90001 ),
+      friendId: rd.increment( 1001 ),
+      "wechatid": /wxid_[0-9A-Za-z]{14}/,
+      "wechatno": /[0-9A-Za-z]{4,11}/,
+      nickname: nickname,
+      headimgurl: rd.image( "120x120", "#894FC4", "#FFF", "png", nickname ),
+      remark: rd.cword( 3, 8 ),
+      'friendstatus|0-1': 1,
+      'status|0-1': 1,
+      'isassignuser|0-1': 0,
+      'isfriend|0-1': 1
     } );
   }
 }

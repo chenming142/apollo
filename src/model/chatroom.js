@@ -2,7 +2,7 @@ import publisher, { Publisher } from "../api/Publisher";
 import { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 import SubordinatorMixin, { SubordinateBehaviorMixin } from "./subordinate";
 
-import { ChatroomMember } from './chatroomMember';
+import ChatroomMemberFactory, { ChatroomMember, ChatroomMemberFlyweightFactory } from './chatroomMember';
 import { WechatInfoFlyweightFactory } from './wechatInfo';
 
 import constants from "../utils/constants";
@@ -25,8 +25,11 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     this.getWechatid = function () { return this.getExtraInfoByKey( 'wxchatroomid' ); }
   }
   setExtraInfo( extraInfo ) {
-    this.getWechatInfo().setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
+    this.getWechatInfo().setExtraInfo( extraInfo );
+    if ( Object.keys( extraInfo ).includes( 'clustername' ) ) {
+      this.getWechatInfo().setExtraInfoByKey( 'nickname', extraInfo[ 'clustername' ] );
+    }
     this.checkSubordinatorNew();
     this.establishSubordinate();
     this.generateMembers();
@@ -56,9 +59,11 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
     }
   }
 
-  getMemberList() {
+  getMemberListByClusterId() {
     let { clusterid } = this;
-    return ChatroomFactory.getChatroomMemberlistByApi( clusterid );
+    let memberlist = ChatroomMemberFactory.getChatroomMemberlistByApi( clusterid );
+    this.setExtraInfoByKey( 'memberlist', memberlist );
+    this.generateMembers();
   }
   generateMembers() {
     const self = this;
@@ -67,14 +72,17 @@ export class Chatroom extends SubordinateBehaviorMixin( SubordinatorMixin( Extra
       chatroomLog.info( '- generateMembers -> 群:' + clusterid + ', 的成员有' + memberlist.length + '个' );
       memberlist.forEach( item => {
         let { memberid, wechatid } = item;
-        let chatroomMember = new ChatroomMember( memberid, wechatid );
+        let chatroomMember = ChatroomMemberFlyweightFactory.getChatroomMember( memberid, wechatid );
         chatroomMember.setExtraInfo( item );
       } );
+      delete self[ 'memberlist' ];
     }
   }
-  getMemberList() {
-    let memberIds = [ ...this.memberIds ];
-    return memberIds.length;
+  getMemberListByMemberIds( memberIds = [] ) {
+    const self = this;
+    memberIds = [ ...self.memberIds ];
+    let chatroomMembers = ChatroomMemberFlyweightFactory.getChatroomMembers();
+    return memberIds.reduce( ( ret, memberId ) => ret.concat( [ chatroomMembers[ memberId ] ] ), [] );
   }
   remove() { ChatroomFactory.delete( this.clusterid ); }
   identity() { return this.clusterid; }
@@ -134,9 +142,6 @@ export default class ChatroomFactory {
     let { wxchatroomid } = chatroomInfo;
     let chatroom = this.getChatroom( clusterid, wxchatroomid );
     chatroom.setExtraInfo( chatroomInfo );
-  }
-  static getChatroomMemberlistByApi( clusterid ) {
-    chatroomLog.info( "- 调用Api接口，获取群成员列表：" + clusterid );
   }
 }
 

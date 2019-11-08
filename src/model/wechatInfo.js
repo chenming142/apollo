@@ -31,6 +31,7 @@ export class ExtraInfo {
     if ( !this.attributes.has( key ) ) {
       throw Error( "ExtraInfo 不含有该 " + key + "的属性, 无法设置值：" + val );
     } else {
+      if ( !val ) extraInfoLog.error( "ExtraInfo 无法设置 " + key + " 的值：" + val )
       this[ key ] = val;
     }
   }
