@@ -66,7 +66,7 @@ module.exports = {
         'space-infix-ops': 0,
         'keyword-spacing': 0,
         'no-trailing-spaces': 0,
-        'no-else-return': 0,
+        'array-bracket-spacing': 0,
         'space-in-parens': 0,
         // debugger使用
         'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
