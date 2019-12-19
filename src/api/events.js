@@ -1,31 +1,28 @@
 import Vue from "vue";
 import constants from "../utils/constants";
-
 import MessageFactory from "../model/message";
 import FriendFatory, { FriendFlyweightFatory } from "../model/friend";
 import { WechatFlyweightFactory } from "../model/wechat";
 import { Chatroom, ChatroomFlyweightFactory } from '../model/chatroom';
 import { WechatInfoFlyweightFactory } from '../model/wechatInfo';
-
 import Logging from '../api/logging';
+import Mock from "mockjs";
 
 const messageLog = Logging.getLogger( 'message' );
-
 const __events__ = constants.EVENT_BUS_EVENTS;
 const __changetype__ = constants.CHANGETYPE;
-
-let Singleton = function () {};
-Singleton.getInstance = ( function () {
+let Singleton = function ( ) {};
+Singleton.getInstance = ( function ( ) {
   let instance = null;
-  return function () {
+  return function ( ) {
     if ( !instance ) {
-      instance = new Vue();
+      instance = new Vue( );
     }
     return instance;
   };
-} )();
-
-let instance = Singleton.getInstance();
+} )( );
+let instance = Singleton.getInstance( );
+const rd = Mock.Random;
 
 function parseSignalRMessageInfo( messageInfo ) {
   let messageData;
@@ -34,7 +31,9 @@ function parseSignalRMessageInfo( messageInfo ) {
   } catch ( error ) {
     messageData = messageInfo;
   }
-  let { cmdtype } = messageData;
+  let {
+    cmdtype
+  } = messageData;
   if ( cmdtype === "CmdAll" ) {
     let messages = messageData[ "customerdownmsgs" ];
     messages.forEach( messageProcessHandler );
@@ -43,7 +42,9 @@ function parseSignalRMessageInfo( messageInfo ) {
   }
 
   function messageProcessHandler( message ) {
-    let { cmdtype } = message;
+    let {
+      cmdtype
+    } = message;
     console.log( '\n' )
     switch ( cmdtype ) {
       case "CmdNewSysMessage":
@@ -67,8 +68,7 @@ function parseSignalRMessageInfo( messageInfo ) {
     }
   }
 }
-
-export function onFriendInfoChanged() {
+export function onFriendInfoChanged( ) {
   let messageInfo = {
     cmdtype: "CmdAll",
     locmsgid: null,
@@ -187,8 +187,7 @@ export function onFriendInfoChanged() {
   };
   parseSignalRMessageInfo( messageInfo );
 }
-
-export function onChatroomInfoChanged() {
+export function onChatroomInfoChanged( ) {
   let messageInfo = {
     cmdtype: "CmdAll",
     locmsgid: null,
@@ -522,10 +521,9 @@ export function onChatroomInfoChanged() {
   };
   parseSignalRMessageInfo( messageInfo );
 }
-
 export function onPersonalStatsChanged( personalid, onlinestatus ) {
-  personalid = personalid ? personalid : WechatFlyweightFactory.getWechats().map( item => item.personalid ).getRdItem();
-  onlinestatus = onlinestatus ? onlinestatus : [ 1, 2, 3 ].getRdItem();
+  personalid = personalid ? personalid : WechatFlyweightFactory.getWechats( ).map( item => item.personalid ).getRdItem( );
+  onlinestatus = onlinestatus ? onlinestatus : [ 1, 2, 3 ].getRdItem( );
   let messageInfo = {
     "cmdtypecode": 0,
     "cmdtype": "CmdPersonalStatusChange",
@@ -538,6 +536,33 @@ export function onPersonalStatsChanged( personalid, onlinestatus ) {
   }
   parseSignalRMessageInfo( messageInfo );
 }
+export function onNewMessage( personalid, friendsidOrClusterid, type, msgtype ) {
+  personalid = personalid ? personalid : WechatFlyweightFactory.getWechats( ).map( item => item.personalid ).getRdItem( );
+  let wechat = WechatFlyweightFactory.getWechat( personalid );
+  let fromwechatid = wechat.getExtraInfoByKey( 'wechatid' );
+  let chatTarget = null;
+  let messageInfo = {
+    "cmdtype": "CmdNewMessage",
+    "locmsgid|1": /1[0-9]{15}/,
+    "personalid": personalid,
+    "userid": 53,
+    "fromwechatid": fromwechatid,
+
+    "clusterid": 37948,
+    "wxchatroomid": "9122274093@chatroom",
+    "friendid": 0,
+    "towechatid": "wxid_y825887d1uq222",
+    "content": "{'text': ''}",
+    "msgtype": 1,
+    "msgsvrid|1": /1[0-9]{18}/,
+    "sendstatus": 4,
+    "reportnum": 1,
+    "createtimestamp": 1561343888000,
+    "issend": 0,
+    "atwxids": null,
+    "duration": 0
+  }
+};
 
 // --- 事件接收器
 instance.$on( __events__.NEW_MESSAGE, function newMessage( messageInfo ) {
@@ -553,22 +578,18 @@ instance.$on( __events__.FRIEND_INFO_CHANGED, function onFriendInfoChanged( frie
   messageLog.info( "--- process[" + __events__.FRIEND_INFO_CHANGED + "]" );
   let { friendsid, wechatid } = friendInfo;
   let friend = FriendFlyweightFatory.getFriend( friendsid, wechatid );
-
   //TODO: friend 可能存在，也可能是New
   //更新需要特殊处理么？
   friend.setExtraInfo( friendInfo );
-
   let wechat, friendList;
-  wechat = friend.findSubordinator();
-  friendList = wechat.getFriendList();
-
+  wechat = friend.findSubordinator( );
+  friendList = wechat.getFriendList( );
   let { changetype } = friendInfo;
   friend.onFriendInfoChangedHandle( changetype );
-
   console.log( '\n--- result.' + __events__.FRIEND_INFO_CHANGED + ' ---------------' );
-  let wechats = WechatFlyweightFactory.getWechats();
-  wechats.forEach( item => item.toString() );
-  messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos() );
+  let wechats = WechatFlyweightFactory.getWechats( );
+  wechats.forEach( item => item.toString( ) );
+  messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos( ) );
 } );
 
 instance.$on( __events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged( chatroomInfo ) {
@@ -578,14 +599,12 @@ instance.$on( __events__.CHATROOM_INFO_CHANGED, function onChatroomInfoChanged( 
   //TODO: chatroom 可能存在，也可能是New
   //更新需要特殊处理么？
   chatroom.setExtraInfo( chatroomInfo );
-
   let { changetype } = chatroomInfo;
   chatroom.onChatroomInfoChangeHandle( changetype );
-
   console.log( '\n--- result.' + __events__.CHATROOM_INFO_CHANGED + ' ---------------' );
-  let wechats = WechatFlyweightFactory.getWechats();
-  wechats.forEach( item => item.toString() );
-  messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos() );
+  let wechats = WechatFlyweightFactory.getWechats( );
+  wechats.forEach( item => item.toString( ) );
+  messageLog.info( "wechatInfos: ", WechatInfoFlyweightFactory.getWechatInfos( ) );
 } );
 
 instance.$on( __events__.WECHAT_ACCOUNTS_ALIVE_STATUS, function onPersonalStatsChanged( wechatInfo ) {
@@ -596,6 +615,4 @@ instance.$on( __events__.WECHAT_ACCOUNTS_ALIVE_STATUS, function onPersonalStatsC
     wechat.setOnlineStatus( onlinestatus );
   }
 } );
-
-
 export default instance;

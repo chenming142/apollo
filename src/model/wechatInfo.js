@@ -5,8 +5,8 @@ const extraInfoLog = Logging.getLogger( 'extraInfo' );
 const wechatInfoLog = Logging.getLogger( 'wechatInfo' );
 
 export class ExtraInfo {
-  constructor() {
-    this.attributes = new Set();
+  constructor( ) {
+    this.attributes = new Set( );
   }
   setAttributes( attributes ) {
     this.attributes = new Set( attributes );
@@ -35,25 +35,25 @@ export class ExtraInfo {
       this[ key ] = val;
     }
   }
-  getWechatInfo() { return WechatInfoFlyweightFactory.getWechatInfo( this.wechatInfoKey ); }
+  getWechatInfo( ) { return WechatInfoFlyweightFactory.getWechatInfo( this.wechatInfoKey ); }
 }
 
 export function ExtraInfoMixin( Base ) {
   return class ExtraInfoBehavior extends Base {
     constructor( ...args ) {
       super( ...args );
-      this._specificPropertiesMethod();
+      this._specificPropertiesMethod( );
     }
     getExtraInfoByKey( key ) {
-      if ( !this.attributes.has( key ) && this.getWechatInfo() ) {
-        return this.getWechatInfo().getExtraInfoByKey( key );
+      if ( !this.attributes.has( key ) && this.getWechatInfo( ) ) {
+        return this.getWechatInfo( ).getExtraInfoByKey( key );
       } else {
         return super.getExtraInfoByKey( key );
       }
     }
     setExtraInfoByKey( key, val ) {
-      if ( !this.attributes.has( key ) && this.getWechatInfo() ) {
-        return this.getWechatInfo().setExtraInfoByKey( key, val );
+      if ( !this.attributes.has( key ) && this.getWechatInfo( ) ) {
+        return this.getWechatInfo( ).setExtraInfoByKey( key, val );
       } else {
         return super.setExtraInfoByKey( key, val );
       }
@@ -63,16 +63,16 @@ export function ExtraInfoMixin( Base ) {
       Object.entries( keyVals ).forEach( ( [ key, val ] ) => {
         self.setExtraInfoByKey( key, val );
       } );
-      self.reactiveSubordinate();
+      self.reactiveSubordinate( );
     }
-    _specificPropertiesMethod() {
+    _specificPropertiesMethod( ) {
       const self = this;
       const SPECIFIC_PROPERTIES_LIST = [ 'nickname', 'wechatid', 'headimgurl', 'wechatno' ];
 
       SPECIFIC_PROPERTIES_LIST.forEach( property => {
-        self[ 'get' + property.capitalize() ] = function () {
+        self[ 'get' + property.capitalize( ) ] = function ( ) {
           if ( !self.attributes.has( property ) ) {
-            let wechatInfo = self.getWechatInfo();
+            let wechatInfo = self.getWechatInfo( );
             if ( wechatInfo ) {
               return wechatInfo.getExtraInfoByKey( property );
             }
@@ -87,7 +87,7 @@ export function ExtraInfoMixin( Base ) {
 
 export class WechatInfo extends ExtraInfoMixin( ExtraInfo ) {
   constructor( wechatid ) {
-    super();
+    super( );
     this.wechatid = wechatid;
     this.setAttributes( WechatInfo.attributes );
   }
@@ -98,7 +98,7 @@ export default class WechatInfoFactory {
   static getWechatInfoInstance( wechatid ) { return this.checkWechatInfoNew( wechatid ); }
   static checkWechatInfoNew( wechatid ) {
     const self = this;
-    let wechatInfos = WechatInfoFlyweightFactory.getWechatInfos();
+    let wechatInfos = WechatInfoFlyweightFactory.getWechatInfos( );
     if ( !wechatInfos.hasWechatInfo( wechatid ) ) {
       return self.getWechatInfoByApi( wechatid );
     }
@@ -117,7 +117,7 @@ export default class WechatInfoFactory {
 export class WechatInfoFlyweightFactory {
   static getWechatInfo( wechatid ) {
     const self = this;
-    let wechatInfos = self.getWechatInfos(),
+    let wechatInfos = self.getWechatInfos( ),
       wechatInfo;
     if ( self.hasWechatInfo( wechatid ) ) {
       wechatInfo = wechatInfos[ wechatid ];
@@ -130,19 +130,19 @@ export class WechatInfoFlyweightFactory {
   }
   static hasWechatInfo( wechatid ) {
     const self = this;
-    let wechatInfos = self.getWechatInfos();
+    let wechatInfos = self.getWechatInfos( );
     return Object.keys( wechatInfos ).includes( String( wechatid ) );
   }
-  static getWechatInfosSize() { return Object.keys( this.getWechatInfos() ).length; }
-  static getWechatInfos() { return this.getInstance().wechatInfos; }
-  static getInstance() {
+  static getWechatInfosSize( ) { return Object.keys( this.getWechatInfos( ) ).length; }
+  static getWechatInfos( ) { return this.getInstance( ).wechatInfos; }
+  static getInstance( ) {
     const ctor = this;
-    return ( function () {
+    return ( function ( ) {
       if ( !ctor.instance ) {
-        ctor.instance = new ctor();
+        ctor.instance = new ctor( );
         ctor.instance.wechatInfos = {};
       }
       return ctor.instance;
-    } )();
+    } )( );
   }
 }

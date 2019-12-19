@@ -2,23 +2,26 @@ import WechatInfoFactory, { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
 
 import constants from "../utils/constants";
 import Logging from '../api/logging';
+import thunkify from '../utils/index';
+import store from '@/store';
 
 const messageLog = Logging.getLogger( 'message' );
 const __msgtype__ = constants.MSG_TYPE;
 const __sendstatus__ = constants.SEND_STATUS;
+const __issend__ = constants.IS_SEND;
 
 export class Message extends ExtraInfo {
   constructor( locmsgid ) {
     messageLog.info( "- Message.ctor: " + locmsgid );
-    super();
+    super( );
     this.locmsgid = locmsgid;
     this.setAttributes( Message.attributes );
   }
   setExtraInfo( extraInfo ) {
     super.setExtraInfo( extraInfo );
-    this.parseMsgInfo();
+    this.parseMsgInfo( );
   }
-  parseMsgInfo() {
+  parseMsgInfo( ) {
     let { content } = this;
     if ( content ) {
       try {
@@ -66,7 +69,7 @@ class AnnouncementDecorator {
   static atuserlist( message ) {
     if ( message.msgAt == __atType__.all ) {
       let chatroom = Chatroom.buildChatroomByChangedMsg( message );
-      if ( chatroom.isSelectedChatTarget() ) {
+      if ( chatroom.isSelectedChatTarget( ) ) {
         instance.$emit( __events__.UPDATE_ANNOUNCEMENT, message.msgBrief );
       }
     }
@@ -74,23 +77,23 @@ class AnnouncementDecorator {
 }
 class SensitiveWordsMessageDecorator {
   static identifierSensitiveWords( richText, message ) {
-    function getSensitiveWords() {
+    function getSensitiveWords( ) {
       if ( SensitiveWordsMessageDecorator.SENSITIVEWORDS ) {
         return Promise.resolve( SensitiveWordsMessageDecorator.SENSITIVEWORDS );
       }
-      return getSensitiveWordsByVuex();
+      return getSensitiveWordsByVuex( );
     }
 
-    function getSensitiveWordsByVuex() {
+    function getSensitiveWordsByVuex( ) {
       let sensitiveWords = store.state.main.sensitiveWords;
       if ( sensitiveWords ) {
         return Promise.resolve( store.state.main.sensitiveWords );
       }
-      return getSensitiveWordsByDB();
+      return getSensitiveWordsByDB( );
     }
 
-    function getSensitiveWordsByDB() {
-      return sensitiveWords.listSensitiveWords().then( data => {
+    function getSensitiveWordsByDB( ) {
+      return sensitiveWords.listSensitiveWords( ).then( data => {
         let result = data;
         SensitiveWordsMessageDecorator.SENSITIVEWORDS = result;
         store.commit( "SET_SENSITIVE_WORDS", result );
@@ -121,7 +124,7 @@ class SensitiveWordsMessageDecorator {
       }
       return Promise.resolve( toBeUpdated );
     }
-    return getSensitiveWords().then( SensitiveWordsHandler ).then( getMsgInfoByDecorator );
+    return getSensitiveWords( ).then( SensitiveWordsHandler ).then( getMsgInfoByDecorator );
   }
 }
 class LinkMessageDecorator {
@@ -160,7 +163,7 @@ class ShareCardMessageDecorator {
       content = parseJSON( content );
     }
 
-    function getShareCardMsgInfoByContent() {
+    function getShareCardMsgInfoByContent( ) {
       if ( content ) {
         let { headPic, nickname } = content;
         if ( headPic && nickname ) {
@@ -220,17 +223,17 @@ class ShareCardMessageDecorator {
       }
     }
 
-    return getShareCardMsgInfoByContent().then( setShareCardMsgInfoHandler );
+    return getShareCardMsgInfoByContent( ).then( setShareCardMsgInfoHandler );
   }
 }
 
-let NormalizedMixin = Base => class NormalizedMessage extends Base {
+const NormalizedMixin = Base => class NormalizedMessage extends Base {
   constructor( ...args ) {
     messageLog.info( "- NormalizedMessage.ctor: " + args[ 0 ] );
     super( ...args );
-    this.normalized();
+    this.normalized( );
   }
-  normalized() {
+  normalized( ) {
     const self = this;
     let { content } = self;
     try {
@@ -241,28 +244,28 @@ let NormalizedMixin = Base => class NormalizedMessage extends Base {
     }
   }
 };
-let RecalledMixin = Base => class RecalledMessage extends Base {
+const RecalledMixin = Base => class RecalledMessage extends Base {
   constructor( ...args ) {
     super( ...args );
     this.recalled = false;
   }
-  recalledHandle() {
+  recalledHandle( ) {
     this.recalled = true;
     this.sendstatus = __sendstatus__.recall;
   }
-  setRecalled() {
+  setRecalled( ) {
     let { sendstatus } = this;
     if ( sendstatus === __sendstatus__.recall ) {
       this.recalled = true;
     }
   }
 };
-let TranslateMixin = Base => class TranslateMessage extends Base {
+const TranslateMixin = Base => class TranslateMessage extends Base {
   constructor( ...args ) {
     super( ...args );
     this.translating = false;
   }
-  setTranslating() {
+  setTranslating( ) {
     this.translating = true;
   }
   translateMsgHandler( translateText ) {
@@ -270,26 +273,26 @@ let TranslateMixin = Base => class TranslateMessage extends Base {
     this.translateText = translateText;
   }
 };
-let ReplacedMixin = Base => class ReplacedMessage extends Base {
+const ReplacedMixin = Base => class ReplacedMessage extends Base {
   constructor( ...args ) {
     super( ...args );
     this.isReplaceMsg( true );
   }
   isReplaceMsg( isReplaceMsg ) { this.isReplaceMsg = isReplaceMsg; }
 };
-let SecondaryMixin = Base => class SecondaryMessage extends Base {
+const SecondaryMixin = Base => class SecondaryMessage extends Base {
   constructor( ...args ) {
     super( ...args );
     this.lazy = true;
     this.placeholder = '';
     this.received = false;
-    this.detectImgHd();
+    this.detectImgHd( );
   }
-  setMsgPlaceholer() {
+  setMsgPlaceholer( ) {
     //TODO: 图片|视频 占位符
     this.placeholder = '';
   }
-  startMsgLoaded() {
+  startMsgLoaded( ) {
     let { received } = this;
     if ( received ) {
       this.lazy = false;
@@ -301,7 +304,7 @@ let SecondaryMixin = Base => class SecondaryMessage extends Base {
     let { locmsgid } = message;
     if ( existLocmsgid !== locmsgid ) return;
 
-    let content = this.parseMsgInfo();
+    let content = this.parseMsgInfo( );
     if ( content ) {
       let { url } = JSON.parse( content );
       if ( url ) {
@@ -309,8 +312,8 @@ let SecondaryMixin = Base => class SecondaryMessage extends Base {
       }
     }
   }
-  detectImgHd() {
-    let content = this.parseMsgInfo();
+  detectImgHd( ) {
+    let content = this.parseMsgInfo( );
     if ( content ) {
       try {
         let { attachtype } = parseJSON( content );
@@ -319,7 +322,6 @@ let SecondaryMixin = Base => class SecondaryMessage extends Base {
     }
   }
 };
-
 
 class TextMessage extends RecalledMixin( ReplacedMixin( Message ) ) {
   constructor( messageInfo ) {
@@ -330,9 +332,9 @@ class TextMessage extends RecalledMixin( ReplacedMixin( Message ) ) {
     this.richText = richText;
     this.isEmoji = isEmoji;
   }
-  buildMsgInfo() {
+  buildMsgInfo( ) {
     const self = this;
-    let content = self.parseMsgInfo();
+    let content = self.parseMsgInfo( );
     let { text, msgsource } = content;
     self.msgBrief = text;
     if ( typeof msgsource == 'string' ) {
@@ -396,8 +398,8 @@ class ShareCardMessage extends RecalledMixin( Message ) {
     super( messageInfo );
     this.msgBrief = '[名片消息]';
   }
-  buildMsgInfo() {
-    let content = this.parseMsgInfo();
+  buildMsgInfo( ) {
+    let content = this.parseMsgInfo( );
     ShareCardMessageDecorator.setShareCardMsgInfo( this );
     let { certflag } = content;
     if ( certflag ) this.certflag = certflag;
@@ -409,11 +411,11 @@ class UrlMessage extends RecalledMixin( Message ) {
   constructor( messageInfo ) {
     super( messageInfo );
     this.msgBrief = "[链接消息]";
-    this.buildMsgInfo();
+    this.buildMsgInfo( );
   }
-  buildMsgInfo() {
+  buildMsgInfo( ) {
     const self = this;
-    let json = this.parseMsgInfo();
+    let json = this.parseMsgInfo( );
     let { type, url, title, des, sourcedisplayname, thumbUrl } = json;
     self.urlType = type;
     switch ( type ) {
@@ -447,7 +449,7 @@ class UrlMessage extends RecalledMixin( Message ) {
         break;
     }
   }
-  downloadFile() {
+  downloadFile( ) {
     this.downloading = !!this.downloading;
   }
 }
@@ -522,26 +524,28 @@ export default class MessageFactory {
     }
     return clazz;
   }
+  static newMessageInstance( messageInfo ) {
+    let { msgtype } = messageInfo;
+    let ctor = this.getMessageCtor( msgtype );
+    if ( ctor ) {
+      return new ctor( messageInfo );
+    }
+    throw new Error('未找到对应的消息类型：'+ msgtype+', 无法构造消息');
+  }
   static getMessageInstance( messageInfo ) {
     return MessageFlyweightFactory.buildMessageInstance( messageInfo );
   }
 }
 
-
 export class MessageFlyweightFactory {
   static buildMessageInstance( messageInfo ) {
     const self = this;
     if ( !messageInfo ) return;
-
     if ( messageInfo instanceof Message ) {
       return self.getMessage( Message );
     } else {
-      let { msgtype } = messageInfo;
-      let ctor = MessageFactory.getMessageCtor( msgtype );
-      if ( ctor ) {
-        let message = new ctor( messageInfo );
-        return self.getMessage( message );
-      }
+      let message = MessageFactory.newMessageInstance(messageInfo);
+      return self.getMessage( message );
     }
   }
   static getMessage( message ) {
@@ -557,18 +561,129 @@ export class MessageFlyweightFactory {
   }
   static hasMessage( locmsgid ) {
     const self = this;
-    let messages = self.getMessages();
+    let messages = self.getMessages( );
     return Object.keys( messages ).indexOf( locmsgid ) > -1;
   }
-  static getMessages() { return this.getInstance().messages; }
-  static getInstance() {
+  static deleteMessage (locmsgid) {
+    const self = this;
+    if(self.hasMessage( locmsgid )) {
+      let messages = self.getMessages( );
+      delete messages[locmsgid];
+    }
+  }
+  static getMessages( ) { return this.getInstance( ).messages; }
+  static getInstance( ) {
     const ctor = this;
-    return ( function () {
+    return ( function ( ) {
       if ( !ctor.instance ) {
-        ctor.instance = new ctor();
+        ctor.instance = new ctor( );
         ctor.instance.messages = {};
       }
       return ctor.instance;
-    } )();
+    } )( );
+  }
+}
+
+let unique = 1;
+const KFMessageMixin = Base => class _XXMessage extends Base {
+  constructor( ...args ) {
+    super( ...args );
+    let [producer, messageInfo] = args;
+    let message = MessageFactory.newMessageInstance(messageInfo);
+    this.__Producer__ = producer;
+    this.__message__ = message;
+  }
+  transmitted() {
+    const self = this;
+    self.__message__.cmdtype = 'CmdSendMessage';
+    self.__message__.issend = __issend__.self;
+    self.__message__.timeout = false;
+    self.__message__.sendstatus = __sendstatus__.sending;
+
+    self._getLocmsgId().then(() => {
+      self.__Producer__.transmit(self.__message__);
+    });
+    return self;
+  }
+  _getLocmsgId () {
+    const self = this;
+    if(self._checkProducerValid()){
+      return getLocmsgId().then(locmsgidHandler);
+
+      function getLocmsgId(){
+        let { locmsgid } = self.__message__;
+        if (!locmsgid) {
+          let sysmsg = { cmdtype: "CmdGetLocMsgId" };
+          return self.chat.invoke("sendsysmsg", JSON.stringify(sysmsg)).then((data) => {
+            return new Promise((resolve, reject) => {
+              if (!data) reject(data);
+              let result = data;
+              if(result)resolve(result['Message']);
+              reject(result);
+            });
+          }); 
+        }
+        return Promise.resolve();
+      }
+      function locmsgidHandler(locmsgid) {
+        if(locmsgid && !self.__message__.hasOwnProperty('locmsgid')){
+          self.__message__.locmsgid = locmsgid;
+          MessageFlyweightFactory.getMessage(self.__message__);
+        }
+      }
+    }
+  }
+  _checkProducerValid () { return this.__Producer__.valid();}
+};
+class KFMessage extends KFMessageMixin (Message){
+  sendInvokingHandler () {
+    const self = this;
+    return thunkify(function*(){
+      self.timeoutref = setTimeout(() => {
+        self.__message__.timeout = true;
+        self.__message__.sendstatus = __sendstatus__.fail;
+        self.clearTimeoutRef();
+      }, 10e3);
+      self.__message__.createtimestamp = +new Date;
+      yield store.dispatch('processANewMessage', { message: self.__message__ });
+    })();
+  }
+  sendSucceedHandler (result) {
+    const self = this;
+    if (typeof result === 'string') {
+      result = JSON.parse(result);
+    }
+    let { locmsgid, sendstatus, createtimestamp } = result;
+    self.__message__.sendstatus = sendstatus;
+    self.__message__.createtimestamp = createtimestamp;
+    self.clearTimeoutRef();
+  }
+  sendFailureHandler(result) {
+    const self = this;
+    if (typeof result === 'string') {
+      try {
+        result = JSON.parse(result);
+      } catch (err) {}
+    }
+    let { createtimestamp, locmsgid } = result;
+    self.__message__.createtimestamp = createtimestamp;
+    self.__message__.sendstatus = __sendstatus__.fail;
+    self.clearTimeoutRef();
+  }
+  clearTimeoutRef () {
+    let { __message__: { sendstatus }, timeoutref } = this;
+    if (sendstatus === __sendstatus__.fail 
+      || sendstatus === __sendstatus__.success) {
+      this.__message__.timeout = false;
+    }
+    clearTimeout(timeoutref);
+    this.timeoutref = null;
+  }
+}
+
+export class MessageProducer {
+  static Producer(messageInfo, producer) {
+    KFMessage kfMessage = new KFMessage(producer, messageInfo);
+    return kfMessage.transmitted();
   }
 }

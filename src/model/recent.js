@@ -13,24 +13,24 @@ const __disturb__ = constants.DISTURB;
 
 export class Recent extends AssociateMixin( SubordinatorMixin( ExtraInfoMixin( ExtraInfo ) ) ) {
   constructor( personalid, chattargetid, chattargettype, wechatid ) {
-    super();
+    super( );
     this.personalid = personalid;
     this.chattargetid = chattargetid;
     this.chattargettype = chattargettype;
     this.wechatInfoKey = wechatid;
     this.setAttributes( Recent.attributes );
   }
-  getUniqKey() {
+  getUniqKey( ) {
     let { personalid, chattargettype } = this;
     let wechatid = this.getExtraInfoByKey( 'wechatid' );
     return personalid + "-" + chattargettype + "-" + wechatid;
   }
   setExtraInfo( extraInfo ) {
-    this.getWechatInfo().setExtraInfo( extraInfo );
+    this.getWechatInfo( ).setExtraInfo( extraInfo );
     super.setExtraInfo( extraInfo );
-    this.checkSubordinatorNew();
-    this.establishSubordinate();
-    this.checkAssociateRefNew();
+    this.checkSubordinatorNew( );
+    this.establishSubordinate( );
+    this.checkAssociateRefNew( );
   }
 
   setLastmsgInfo( lastMessage ) {
@@ -48,8 +48,8 @@ export class Recent extends AssociateMixin( SubordinatorMixin( ExtraInfoMixin( E
     }
   }
 
-  remove() { RecentFactory.delete( this.getUniqKey() ); }
-  identity() { return this.getUniqKey(); }
+  remove( ) { RecentFactory.delete( this.getUniqKey( ) ); }
+  identity( ) { return this.getUniqKey( ); }
 }
 Recent.attributes = [ "personalid", "stick", "unreadmsgcount", "datastatus", "disturbsetting", "draft" ];
 
@@ -93,9 +93,9 @@ export default class RecentFactory {
     let message = MessageFactory.getMessageInstance( messageInfo );
 
     let chattargettype, chattargetid, wechatid;
-    chattargetid = message.getChattargetid();
-    chattargettype = message.getChattargettype();
-    wechatid = message.getWechatid();
+    chattargetid = message.getChattargetid( );
+    chattargettype = message.getChattargettype( );
+    wechatid = message.getWechatid( );
 
     let recent = new Recent( personalid, chattargettype, chattargetid, wechatid );
     let _recent = RecentFactory.getRecentInstance( recent );
@@ -129,13 +129,13 @@ export class RecentFlyweightFactory {
   }
   static getRecentListByUniqKeys( uniqKeys ) {
     const self = this;
-    let recentList = self.getRecentList();
-    return uniqKeys.reduce( ( ret, uniqKey ) => ret.concat( [ recentList[ self.getRecentIndex( uniqKey ) ] ] ), [] );
+    let recentList = self.getRecentList( );
+    return uniqKeys.reduce( ( ret, uniqKey ) => ret.concat( [ recentList[ self.getRecentIndex( uniqKey ) ] ] ), [ ] );
   }
   static getRecent( recent ) {
     const self = this;
-    let recentList = self.getRecentList();
-    let uniqKey = recent.getUniqKey();
+    let recentList = self.getRecentList( );
+    let uniqKey = recent.getUniqKey( );
     let index = self.getRecentIndex( uniqKey );
     if ( index > -1 ) {
       //TODO: UPDATED~
@@ -148,29 +148,29 @@ export class RecentFlyweightFactory {
   static delete( uniqKey ) {
     const self = this;
     let index = self.getRecentIndex( uniqKey );
-    let recentList = self.getRecentList();
+    let recentList = self.getRecentList( );
     if ( index > -1 ) {
       recentList.splice( index, 1 );
     }
   }
   static getRecentIndex( uniqKey ) {
     const self = this;
-    let recentList = self.getRecentList();
+    let recentList = self.getRecentList( );
     if ( !recentList || recentList.length <= 0 ) return -1;
     if ( recentList.length > 0 ) {
-      return recentList.findIndex( item => item.getUniqKey() === uniqKey );
+      return recentList.findIndex( item => item.getUniqKey( ) === uniqKey );
     }
   }
-  static getRecentSize() { return this.getRecentList().length; }
-  static getRecentList() { return this.getInstance().recentList; }
-  static getInstance() {
+  static getRecentSize( ) { return this.getRecentList( ).length; }
+  static getRecentList( ) { return this.getInstance( ).recentList; }
+  static getInstance( ) {
     const ctor = this;
-    return ( function () {
+    return ( function ( ) {
       if ( !ctor.instance ) {
-        ctor.instance = new ctor();
-        ctor.instance.recentList = [];
+        ctor.instance = new ctor( );
+        ctor.instance.recentList = [ ];
       }
       return ctor.instance;
-    } )();
+    } )( );
   }
 }
