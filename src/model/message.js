@@ -1,9 +1,11 @@
 import WechatInfoFactory, { ExtraInfo, ExtraInfoMixin } from "./wechatInfo";
+import Producer from '../api/Producer';
 
 import constants from "../utils/constants";
 import Logging from '../api/logging';
-import thunkify from '../utils/index';
-import store from '@/store';
+import store from '../store';
+
+import { html_encode } from "../utils/helper"
 
 const messageLog = Logging.getLogger( 'message' );
 const __msgtype__ = constants.MSG_TYPE;
@@ -11,11 +13,14 @@ const __sendstatus__ = constants.SEND_STATUS;
 const __issend__ = constants.IS_SEND;
 
 export class Message extends ExtraInfo {
-  constructor( locmsgid ) {
-    messageLog.info( "- Message.ctor: " + locmsgid );
-    super( );
-    this.locmsgid = locmsgid;
+  constructor( messageInfo ) {
+    let { locmsgid, msgtype } = messageInfo;
+    messageLog.info( "- Message.ctor: " + msgtype + ", locmsgid: "+ locmsgid );
+    super(messageInfo);
+    this.locmsgid = locmsgid ? locmsgid : void 0;
     this.setAttributes( Message.attributes );
+
+    this.setExtraInfo( messageInfo )
   }
   setExtraInfo( extraInfo ) {
     super.setExtraInfo( extraInfo );
@@ -326,6 +331,7 @@ const SecondaryMixin = Base => class SecondaryMessage extends Base {
 class TextMessage extends RecalledMixin( ReplacedMixin( Message ) ) {
   constructor( messageInfo ) {
     super( messageInfo );
+    this.buildMsgInfo();
   }
   setTextMsgInfo( result ) {
     let { richText, isEmoji } = result;
@@ -584,11 +590,10 @@ export class MessageFlyweightFactory {
   }
 }
 
-let unique = 1;
 const KFMessageMixin = Base => class _XXMessage extends Base {
   constructor( ...args ) {
-    super( ...args );
     let [producer, messageInfo] = args;
+    super( messageInfo );
     let message = MessageFactory.newMessageInstance(messageInfo);
     this.__Producer__ = producer;
     this.__message__ = message;
@@ -614,7 +619,7 @@ const KFMessageMixin = Base => class _XXMessage extends Base {
         let { locmsgid } = self.__message__;
         if (!locmsgid) {
           let sysmsg = { cmdtype: "CmdGetLocMsgId" };
-          return self.chat.invoke("sendsysmsg", JSON.stringify(sysmsg)).then((data) => {
+          return self.__Producer__.chat.invoke("sendsysmsg", JSON.stringify(sysmsg)).then((data) => {
             return new Promise((resolve, reject) => {
               if (!data) reject(data);
               let result = data;
@@ -634,29 +639,25 @@ const KFMessageMixin = Base => class _XXMessage extends Base {
     }
   }
   _checkProducerValid () { return this.__Producer__.valid();}
-};
-class KFMessage extends KFMessageMixin (Message){
   sendInvokingHandler () {
     const self = this;
-    return thunkify(function*(){
-      self.timeoutref = setTimeout(() => {
-        self.__message__.timeout = true;
-        self.__message__.sendstatus = __sendstatus__.fail;
-        self.clearTimeoutRef();
-      }, 10e3);
-      self.__message__.createtimestamp = +new Date;
-      yield store.dispatch('processANewMessage', { message: self.__message__ });
-    })();
+    self.timeoutref = setTimeout(() => {
+      self.__message__.timeout = true;
+      self.__message__.sendstatus = __sendstatus__.fail;
+      self._clearTimeoutRef();
+    }, 10e3);
+    self.__message__.createtimestamp = +new Date;
+    store.dispatch('processANewMessage', { message: self.__message__ });
   }
   sendSucceedHandler (result) {
     const self = this;
     if (typeof result === 'string') {
       result = JSON.parse(result);
     }
-    let { locmsgid, sendstatus, createtimestamp } = result;
+    let { sendstatus, createtimestamp } = result;
     self.__message__.sendstatus = sendstatus;
     self.__message__.createtimestamp = createtimestamp;
-    self.clearTimeoutRef();
+    self._clearTimeoutRef();
   }
   sendFailureHandler(result) {
     const self = this;
@@ -665,12 +666,12 @@ class KFMessage extends KFMessageMixin (Message){
         result = JSON.parse(result);
       } catch (err) {}
     }
-    let { createtimestamp, locmsgid } = result;
+    let { createtimestamp } = result;
     self.__message__.createtimestamp = createtimestamp;
     self.__message__.sendstatus = __sendstatus__.fail;
-    self.clearTimeoutRef();
+    self._clearTimeoutRef();
   }
-  clearTimeoutRef () {
+  _clearTimeoutRef () {
     let { __message__: { sendstatus }, timeoutref } = this;
     if (sendstatus === __sendstatus__.fail 
       || sendstatus === __sendstatus__.success) {
@@ -679,11 +680,25 @@ class KFMessage extends KFMessageMixin (Message){
     clearTimeout(timeoutref);
     this.timeoutref = null;
   }
+};
+class KFMessage extends KFMessageMixin (Message){
+  setExtraInfo (extraInfo) {/** 装饰占位 **/}
+  decorator () {
+    const self = this;
+    return new Proxy(self, {
+      get (target, key) {
+        return self.__message__[key];
+      },
+      set (target, key, val) {
+        return self.__message__[key] = val;
+      }
+    });
+  }
 }
 
 export class MessageProducer {
-  static Producer(messageInfo, producer) {
-    KFMessage kfMessage = new KFMessage(producer, messageInfo);
-    return kfMessage.transmitted();
+  static Producer(messageInfo, producer = Producer, ) { 
+    return new KFMessage(producer, messageInfo).decorator();
   }
 }
+

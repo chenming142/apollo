@@ -68,3 +68,5 @@ export function formatJson( json ) {
     return '<span class="' + cls + '">' + match + '</span>';
   } );
 }
+
+export function html_encode (str) { return str;}

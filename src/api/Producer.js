@@ -1,8 +1,12 @@
 import { MessageProducer } from '../model/message';
 
+class WSSignalR {
+
+}
+
 export class Producer {
   constructor () {
-    this.chat = void 0;
+    this.chat = WSSignalR;
     this.disConnection = true;
   }
   static valid () {
@@ -13,9 +17,7 @@ export class Producer {
       Message.error('客服端与服务器连接中断，正在连接中.....');
     } 
   }
-  static sendMessage (messageInfo) {
-    MessageProducer.Producer(this, messageInfo);
-  }
+  static sendMessage (messageInfo) { MessageProducer.Producer(messageInfo, this);}
   static transmit (message) {
     let chatmsg = JSON.stringify(message);
     console.log("WSSignalR[sendMessage]", chatmsg);
@@ -50,3 +52,15 @@ export class Producer {
     }
   }
 }
+
+Producer.getInstance = ( function () {
+  let instance = null;
+  return function ( argument ) {
+    if ( !instance ) {
+      instance = new Producer();
+    }
+    return instance;
+  }
+} )();
+
+export default Producer.getInstance();
