@@ -665,100 +665,100 @@ export default {
 </script>
 
 <style>
-div.state {
-  border: 1px solid #EBEEF5;
-  border-radius: 5px;
-  margin: 20px;
-  padding: 30px 10px 10px;
-}
+  div.state {
+    border: 1px solid #EBEEF5;
+    border-radius: 5px;
+    margin: 20px;
+    padding: 30px 10px 10px;
+  }
 
-div.state .item {
-  margin: 0 8px;
-}
+  div.state .item {
+    margin: 0 8px;
+  }
 
-div.state .item .el-badge__content {
-  top: 10px;
-  right: 7px;
-}
+  div.state .item .el-badge__content {
+    top: 10px;
+    right: 7px;
+  }
 
-header.operate {
-  min-height: 80px;
-  height: auto !important;
-}
+  header.operate {
+    min-height: 80px;
+    height: auto !important;
+  }
 
-.operate .el-form-item__content {
-  text-align: left;
-}
+  .operate .el-form-item__content {
+    text-align: left;
+  }
 
-.operate .el-form-item__content>* {
-  margin-right: 5px;
-}
+  .operate .el-form-item__content>* {
+    margin-right: 5px;
+  }
 
-.personal {
-  margin-bottom: 15px;
-}
+  .personal {
+    margin-bottom: 15px;
+  }
 
-.personal .el-card__body {
-  padding: 5px;
-}
+  .personal .el-card__body {
+    padding: 5px;
+  }
 
-.personal .el-card__header div>* {
-  margin-right: 10px;
-}
+  .personal .el-card__header div>* {
+    margin-right: 10px;
+  }
 
-.personal .el-card__header div.el-radio-group>* {
-  margin-right: 0;
-}
+  .personal .el-card__header div.el-radio-group>* {
+    margin-right: 0;
+  }
 
-.state .el-collapse,
-.personal .el-collapse {
-  border-top: none;
-  border-bottom: none;
-}
+  .state .el-collapse,
+  .personal .el-collapse {
+    border-top: none;
+    border-bottom: none;
+  }
 
-.state .el-collapse-item__header,
-.personal .el-collapse-item__header {
-  height: 36px;
-  line-height: 36px;
-}
+  .state .el-collapse-item__header,
+  .personal .el-collapse-item__header {
+    height: 36px;
+    line-height: 36px;
+  }
 
-.personal .el-collapse-item__header button {
-  padding: 5px;
-  margin-left: 12px;
-}
+  .personal .el-collapse-item__header button {
+    padding: 5px;
+    margin-left: 12px;
+  }
 
-.personal .el-collapse-item__header .el-badge sup {
-  top: 10px;
-}
+  .personal .el-collapse-item__header .el-badge sup {
+    top: 10px;
+  }
 
-.membercount.el-badge sup {
-  top: 9px;
-}
+  .membercount.el-badge sup {
+    top: 9px;
+  }
 
-pre {
-  text-align: left;
-  outline: 1px solid #ccc;
-  padding: 5px;
-  margin: 5px;
-}
+  pre {
+    text-align: left;
+    outline: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px;
+  }
 
-.string {
-  color: green;
-}
+  .string {
+    color: green;
+  }
 
-.number {
-  color: darkorange;
-}
+  .number {
+    color: darkorange;
+  }
 
-.boolean {
-  color: blue;
-}
+  .boolean {
+    color: blue;
+  }
 
-.null {
-  color: magenta;
-}
+  .null {
+    color: magenta;
+  }
 
-.key {
-  color: red;
-}
+  .key {
+    color: red;
+  }
 </style>

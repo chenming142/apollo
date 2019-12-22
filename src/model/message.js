@@ -701,4 +701,3 @@ export class MessageProducer {
     return new KFMessage(producer, messageInfo).decorator();
   }
 }
-
